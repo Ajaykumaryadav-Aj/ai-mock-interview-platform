@@ -318,4 +318,5 @@ Distributed under the **MIT License**. See `LICENSE` for more information.
 <div align="center">
   <p>Built with ❤️ by <a href="https://github.com/Ajaykumaryadav-Aj"><strong>Ajay Kumar</strong></a></p>
   <p>⭐ Star this repository if you found it useful for your technical interview preparation!</p>
-</div>
+</div>#   a i - m o c k - i n t e r v i e w - p l a t f o r m  
+ 
