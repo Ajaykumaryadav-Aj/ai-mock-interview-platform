@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![AI Mock Interview Platform Banner](https://img.shields.io/badge/Platform-Production--Ready-blueviolet?style=for-the-badge)
+![Platform](https://img.shields.io/badge/Platform-Production--Ready-blueviolet?style=for-the-badge)
 ![React](https://img.shields.io/badge/React-18.x-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![Vite](https://img.shields.io/badge/Vite-5.x-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 ![Google Gemini](https://img.shields.io/badge/AI-Google%20Gemini%202.5%20Flash-4285F4?style=for-the-badge&logo=google&logoColor=white)
@@ -135,7 +135,7 @@ flowchart TD
 ## 📁 Repository Structure
 
 ```
-AI-Mock-Interview-Platform/
+ai-mock-interview-platform/
 ├── README.md                      # Primary project documentation
 ├── .env.example                   # Root environment configuration template
 └── ai-interview/                  # Core application package
@@ -189,8 +189,8 @@ AI-Mock-Interview-Platform/
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/Ajaykumaryadav-Aj/ai-interview-platform.git
-   cd ai-interview-platform/ai-interview
+   git clone https://github.com/Ajaykumaryadav-Aj/ai-mock-interview-platform.git
+   cd ai-mock-interview-platform/ai-interview
    ```
 
 2. **Install dependencies:**
@@ -318,5 +318,4 @@ Distributed under the **MIT License**. See `LICENSE` for more information.
 <div align="center">
   <p>Built with ❤️ by <a href="https://github.com/Ajaykumaryadav-Aj"><strong>Ajay Kumar</strong></a></p>
   <p>⭐ Star this repository if you found it useful for your technical interview preparation!</p>
-</div>#   a i - m o c k - i n t e r v i e w - p l a t f o r m  
- 
+</div>
