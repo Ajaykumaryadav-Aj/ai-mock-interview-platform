@@ -9,9 +9,16 @@ let geminiClient = null;
 function getGeminiClient() {
   if (geminiClient) return geminiClient;
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  let apiKey = (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || "").trim();
+  if (
+    (apiKey.startsWith('"') && apiKey.endsWith('"')) ||
+    (apiKey.startsWith("'") && apiKey.endsWith("'"))
+  ) {
+    apiKey = apiKey.slice(1, -1);
+  }
+
   if (!apiKey) {
-    throw new Error("GEMINI_API_KEY is not configured in server environment.");
+    throw new Error("GEMINI_API_KEY is not configured in Vercel environment variables.");
   }
 
   geminiClient = new GoogleGenAI({ apiKey });

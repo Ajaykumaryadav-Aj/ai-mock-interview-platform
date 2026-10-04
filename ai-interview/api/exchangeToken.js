@@ -4,6 +4,7 @@
 
 import admin from "firebase-admin";
 import { verifyToken } from "@clerk/backend";
+import { handleCors } from "./_cors.js";
 
 /**
  * Initializes Firebase Admin SDK once per serverless container using server-side credentials.
@@ -13,12 +14,39 @@ function getFirebaseAdmin() {
     return admin.app();
   }
 
-  const projectId = process.env.FIREBASE_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+  const projectId = (
+    process.env.FIREBASE_PROJECT_ID ||
+    process.env.VITE_FIREBASE_PROJECT_ID ||
+    "ai-interview-1842f"
+  ).trim();
 
-  if (!projectId || !clientEmail || !privateKey) {
-    throw new Error("Missing Firebase service account credentials in server environment variables.");
+  const clientEmail = (
+    process.env.FIREBASE_CLIENT_EMAIL ||
+    process.env.VITE_FIREBASE_CLIENT_EMAIL ||
+    ""
+  ).trim();
+
+  let privateKey = (
+    process.env.FIREBASE_PRIVATE_KEY ||
+    process.env.VITE_FIREBASE_PRIVATE_KEY ||
+    ""
+  ).trim();
+
+  // Strip wrapping quotes if user pasted with quotes in Vercel Dashboard
+  if (
+    (privateKey.startsWith('"') && privateKey.endsWith('"')) ||
+    (privateKey.startsWith("'") && privateKey.endsWith("'"))
+  ) {
+    privateKey = privateKey.slice(1, -1);
+  }
+
+  if (!clientEmail || !privateKey) {
+    const missing = [];
+    if (!clientEmail) missing.push("FIREBASE_CLIENT_EMAIL");
+    if (!privateKey) missing.push("FIREBASE_PRIVATE_KEY");
+    throw new Error(
+      `Missing Firebase service account credentials in Vercel environment: ${missing.join(", ")}`
+    );
   }
 
   // Handle escaped \n characters from multiline environment variables
@@ -34,8 +62,6 @@ function getFirebaseAdmin() {
     }),
   });
 }
-
-import { handleCors } from "./_cors.js";
 
 /**
  * Serverless Function Handler
@@ -80,13 +106,34 @@ export default async function handler(req, res) {
   }
 
   // ── 4. Verify the Clerk JWT Server-Side ────────────────────────────────────
-  const secretKey = process.env.CLERK_SECRET_KEY;
-  const rawJwtKey = process.env.CLERK_JWT_KEY;
+  const secretKey = (
+    process.env.CLERK_SECRET_KEY ||
+    process.env.VITE_CLERK_SECRET_KEY ||
+    ""
+  ).trim();
+
+  let rawJwtKey = (
+    process.env.CLERK_JWT_KEY ||
+    process.env.VITE_CLERK_JWT_KEY ||
+    ""
+  ).trim();
+
+  if (
+    (rawJwtKey.startsWith('"') && rawJwtKey.endsWith('"')) ||
+    (rawJwtKey.startsWith("'") && rawJwtKey.endsWith("'"))
+  ) {
+    rawJwtKey = rawJwtKey.slice(1, -1);
+  }
+
   const jwtKey = rawJwtKey ? rawJwtKey.replace(/\\n/g, "\n") : undefined;
 
   if (!secretKey && !jwtKey) {
-    console.error("[exchangeToken] Neither CLERK_SECRET_KEY nor CLERK_JWT_KEY is set in server environment.");
-    return res.status(500).json({ error: "Authentication server configuration error." });
+    console.error(
+      "[exchangeToken] Missing Clerk secrets: neither CLERK_SECRET_KEY nor CLERK_JWT_KEY is set in Vercel environment variables. Please add CLERK_SECRET_KEY in Vercel Project Settings → Environment Variables and redeploy."
+    );
+    return res.status(500).json({
+      error: "Authentication server configuration error.",
+    });
   }
 
   let clerkUserId;
@@ -122,6 +169,8 @@ export default async function handler(req, res) {
     return res.status(200).json({ firebaseToken });
   } catch (err) {
     console.error("[exchangeToken] Firebase custom token creation failed:", err.message);
-    return res.status(500).json({ error: "Failed to generate Firebase authentication token." });
+    return res.status(500).json({
+      error: "Failed to generate Firebase authentication token.",
+    });
   }
 }
