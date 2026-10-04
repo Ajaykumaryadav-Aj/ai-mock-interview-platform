@@ -89,6 +89,32 @@ export const FormMockInterview = ({ initialData }) => {
   const [resumeError, setResumeError] = useState("");
   const fileInputRef = useRef(null);
 
+  const populateFormWithAnalysis = (analysis) => {
+    if (!analysis) return;
+    if (analysis.targetRole) {
+      form.setValue("position", analysis.targetRole, { shouldValidate: true });
+    }
+    if (analysis.technicalSkills && analysis.technicalSkills.length > 0) {
+      form.setValue("techStack", analysis.technicalSkills.slice(0, 6).join(", "), {
+        shouldValidate: true,
+      });
+    }
+    if (typeof analysis.experienceYears === "number") {
+      form.setValue("experience", Math.max(0, Math.round(analysis.experienceYears)), {
+        shouldValidate: true,
+      });
+    }
+    if (analysis.summary) {
+      form.setValue("description", analysis.summary, { shouldValidate: true });
+    } else if (analysis.targetRole && analysis.technicalSkills) {
+      form.setValue(
+        "description",
+        `Comprehensive interview tailored to ${analysis.targetRole} focusing on ${analysis.technicalSkills.slice(0, 4).join(", ")}.`,
+        { shouldValidate: true }
+      );
+    }
+  };
+
   const handleProcessFile = async (file) => {
     if (!file) return;
     setResumeError("");
@@ -96,8 +122,14 @@ export const FormMockInterview = ({ initialData }) => {
     try {
       const result = await processResume(file);
       setResumeData(result);
-      toast.success("Resume analyzed successfully!", {
-        description: `Profile detected: ${result.analysis?.candidateName || "Candidate"} (${result.analysis?.targetRole || "Engineer"})`,
+
+      // Automatically autofill form inputs from the analyzed resume data
+      if (result?.analysis) {
+        populateFormWithAnalysis(result.analysis);
+      }
+
+      toast.success("Resume analyzed & form autofilled!", {
+        description: `Profile: ${result.analysis?.candidateName || "Candidate"} (${result.analysis?.targetRole || "Engineer"}) • Skills: ${(result.analysis?.technicalSkills || []).slice(0, 5).join(", ")}`,
       });
     } catch (err) {
       console.error("[FormMockInterview] Resume processing error:", err);
@@ -119,20 +151,7 @@ export const FormMockInterview = ({ initialData }) => {
 
   const handleAutoFillFromResume = () => {
     if (!resumeData?.analysis) return;
-    const a = resumeData.analysis;
-    if (a.targetRole) {
-      form.setValue("position", a.targetRole, { shouldValidate: true });
-    }
-    if (a.technicalSkills && a.technicalSkills.length > 0) {
-      form.setValue("techStack", a.technicalSkills.slice(0, 5).join(", "), {
-        shouldValidate: true,
-      });
-    }
-    if (typeof a.experienceYears === "number") {
-      form.setValue("experience", Math.max(0, Math.round(a.experienceYears)), {
-        shouldValidate: true,
-      });
-    }
+    populateFormWithAnalysis(resumeData.analysis);
     toast.info("Form populated from resume!", {
       description: "You can adjust any fields as needed before starting.",
     });

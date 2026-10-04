@@ -312,6 +312,36 @@ const extractPdfTextFromStreams = async (buffer) => {
 /**
  * Parses PDF graphics and text operators (Tj, TJ, ', ") inside a decompressed content stream.
  *
+/**
+ * Decodes PDF hex-encoded strings e.g. <48656c6c6f>
+ */
+const decodeHexPdfString = (hex) => {
+  const cleanHex = hex.replace(/\s+/g, "");
+  if (!cleanHex) return "";
+  let str = "";
+  if (cleanHex.startsWith("feff") || cleanHex.startsWith("FEFF")) {
+    for (let i = 4; i < cleanHex.length; i += 4) {
+      const code = parseInt(cleanHex.substr(i, 4), 16);
+      if (!isNaN(code) && code >= 32 && code < 65534) {
+        str += String.fromCharCode(code);
+      }
+    }
+  } else {
+    for (let i = 0; i < cleanHex.length; i += 2) {
+      const code = parseInt(cleanHex.substr(i, 2), 16);
+      if (!isNaN(code) && code >= 32 && code <= 126) {
+        str += String.fromCharCode(code);
+      } else if (code === 10 || code === 13 || code === 9) {
+        str += " ";
+      }
+    }
+  }
+  return str.trim();
+};
+
+/**
+ * Parses PDF graphics and text operators (Tj, TJ, ', ") inside a decompressed content stream.
+ *
  * @param {string} content
  * @returns {string}
  */
@@ -326,19 +356,32 @@ const parsePdfContentOperators = (content) => {
     if (decoded) result.push(decoded);
   }
 
-  // Match [ (Text) 20 (More) ] TJ
+  // Match <HEX> Tj or <HEX> ' or <HEX> "
+  const hexTjRegex = /<([0-9a-fA-F]+)>\s*(?:Tj|'|")/g;
+  let hMatch;
+  while ((hMatch = hexTjRegex.exec(content)) !== null) {
+    const decoded = decodeHexPdfString(hMatch[1]);
+    if (decoded) result.push(decoded);
+  }
+
+  // Match [ (Text) 20 <HEX> ] TJ
   const arrayTjRegex = /\[(.*?)\]\s*TJ/gs;
   while ((match = arrayTjRegex.exec(content)) !== null) {
     const arrayContent = match[1];
-    const subMatches = arrayContent.match(/\(([^)]*)\)/g);
-    if (subMatches) {
-      const words = subMatches
-        .map((s) => decodePdfString(s.slice(1, -1)))
-        .filter(Boolean)
-        .join("");
-      if (words.trim()) {
-        result.push(words);
+    const itemRegex = /(?:\(([^)]*)\)|<([0-9a-fA-F]+)>)/g;
+    let itemMatch;
+    const words = [];
+    while ((itemMatch = itemRegex.exec(arrayContent)) !== null) {
+      if (itemMatch[1] !== undefined) {
+        const decoded = decodePdfString(itemMatch[1]);
+        if (decoded) words.push(decoded);
+      } else if (itemMatch[2] !== undefined) {
+        const decoded = decodeHexPdfString(itemMatch[2]);
+        if (decoded) words.push(decoded);
       }
+    }
+    if (words.length > 0) {
+      result.push(words.join(""));
     }
   }
 

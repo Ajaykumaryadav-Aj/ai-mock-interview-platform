@@ -7,6 +7,41 @@ import { verifyToken } from "@clerk/backend";
 import { handleCors } from "./_cors.js";
 
 /**
+ * Safely inspects server-side environment variables and logs their presence.
+ * NEVER prints secret values, JWT keys, or private keys.
+ *
+ * @returns {{ present: string[], missing: string[], status: Record<string, boolean> }}
+ */
+export function checkServerConfig() {
+  const status = {
+    CLERK_SECRET_KEY: Boolean(
+      (process.env.CLERK_SECRET_KEY || process.env.VITE_CLERK_SECRET_KEY || "").trim()
+    ),
+    CLERK_JWT_KEY: Boolean(
+      (process.env.CLERK_JWT_KEY || process.env.VITE_CLERK_JWT_KEY || "").trim()
+    ),
+    FIREBASE_PROJECT_ID: Boolean(
+      (process.env.FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID || "").trim()
+    ),
+    FIREBASE_CLIENT_EMAIL: Boolean(
+      (process.env.FIREBASE_CLIENT_EMAIL || process.env.VITE_FIREBASE_CLIENT_EMAIL || "").trim()
+    ),
+    FIREBASE_PRIVATE_KEY: Boolean(
+      (process.env.FIREBASE_PRIVATE_KEY || process.env.VITE_FIREBASE_PRIVATE_KEY || "").trim()
+    ),
+  };
+
+  const present = Object.keys(status).filter((key) => status[key]);
+  const missing = Object.keys(status).filter((key) => !status[key]);
+
+  console.info(
+    `[exchangeToken:config] Environment check — Present: [${present.join(", ") || "none"}], Missing: [${missing.join(", ") || "none"}]`
+  );
+
+  return { present, missing, status };
+}
+
+/**
  * Initializes Firebase Admin SDK once per serverless container using server-side credentials.
  */
 function getFirebaseAdmin() {
@@ -44,8 +79,12 @@ function getFirebaseAdmin() {
     const missing = [];
     if (!clientEmail) missing.push("FIREBASE_CLIENT_EMAIL");
     if (!privateKey) missing.push("FIREBASE_PRIVATE_KEY");
+    console.error(
+      `[exchangeToken] Missing Firebase Admin credentials: [${missing.join(", ")}]. ` +
+      `Ensure these variables are configured in Vercel Project Settings → Environment Variables.`
+    );
     throw new Error(
-      `Missing Firebase service account credentials in Vercel environment: ${missing.join(", ")}`
+      `Missing Firebase service account credentials in server environment: ${missing.join(", ")}`
     );
   }
 
@@ -106,6 +145,8 @@ export default async function handler(req, res) {
   }
 
   // ── 4. Verify the Clerk JWT Server-Side ────────────────────────────────────
+  const { missing } = checkServerConfig();
+
   const secretKey = (
     process.env.CLERK_SECRET_KEY ||
     process.env.VITE_CLERK_SECRET_KEY ||
@@ -128,8 +169,9 @@ export default async function handler(req, res) {
   const jwtKey = rawJwtKey ? rawJwtKey.replace(/\\n/g, "\n") : undefined;
 
   if (!secretKey && !jwtKey) {
+    const missingClerk = missing.filter((k) => k.startsWith("CLERK"));
     console.error(
-      "[exchangeToken] Missing Clerk secrets: neither CLERK_SECRET_KEY nor CLERK_JWT_KEY is set in Vercel environment variables. Please add CLERK_SECRET_KEY in Vercel Project Settings → Environment Variables and redeploy."
+      `[exchangeToken] Missing Clerk secrets: neither CLERK_SECRET_KEY nor CLERK_JWT_KEY is set in server environment. Missing variable names: [${missingClerk.join(", ")}]. Please configure CLERK_SECRET_KEY in Vercel Project Settings → Environment Variables and redeploy.`
     );
     return res.status(500).json({
       error: "Authentication server configuration error.",

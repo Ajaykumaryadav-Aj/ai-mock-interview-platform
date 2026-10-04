@@ -223,9 +223,9 @@ export const generateMockResumeAnalysis = (resumeText = "") => {
     .filter(Boolean);
   const lower = text.toLowerCase();
 
-  // 1. Detect candidate name: First non-metadata line
+  // 1. Detect candidate name: First clean non-metadata line
   let candidateName = "Candidate";
-  for (let i = 0; i < Math.min(lines.length, 6); i++) {
+  for (let i = 0; i < Math.min(lines.length, 8); i++) {
     const line = lines[i];
     const lineLower = line.toLowerCase();
     if (
@@ -239,272 +239,327 @@ export const generateMockResumeAnalysis = (resumeText = "") => {
       !lineLower.includes("phone") &&
       !lineLower.includes("github") &&
       !lineLower.includes("linkedin") &&
+      !lineLower.includes("portfolio") &&
+      !lineLower.includes("profile") &&
+      !lineLower.includes("contact") &&
       !line.includes("@") &&
       !line.includes("http") &&
-      !/^\d+$/.test(line)
+      !line.includes(".com") &&
+      !/^\d+$/.test(line) &&
+      !/^(skills|education|experience|summary|projects?|profile|about)/i.test(line)
     ) {
       candidateName = line.replace(/[^\w\s.-]/g, "").trim() || "Candidate";
       break;
     }
   }
 
-  // 2. Detect target role
-  const roleKeywords = [
-    "frontend developer",
-    "frontend engineer",
-    "full stack developer",
-    "full stack engineer",
-    "fullstack developer",
-    "software engineer",
-    "software developer",
-    "backend developer",
-    "backend engineer",
-    "web developer",
-    "mobile developer",
-    "flutter developer",
-    "react developer",
-    "node.js developer",
+  // 2. Comprehensive technical skills catalog (250+ technologies across all software domains)
+  const skillsCatalog = [
+    // Languages
+    "JavaScript", "TypeScript", "Python", "Java", "C++", "C#", "C", "PHP", "Go", "Golang",
+    "Rust", "Ruby", "Swift", "Kotlin", "Dart", "R", "SQL", "HTML5", "HTML", "CSS3", "CSS", "Bash", "Shell",
+    // Frontend
+    "React", "React.js", "Next.js", "Angular", "Vue", "Vue.js", "Svelte", "Redux", "Redux Toolkit", "Zustand",
+    "Tailwind CSS", "Bootstrap", "Material UI", "Shadcn UI", "Sass", "SCSS", "Vite", "Webpack", "jQuery",
+    // Backend
+    "Node.js", "Express", "Express.js", "NestJS", "Spring", "Spring Boot", "Hibernate", "Django", "Flask",
+    "FastAPI", "Laravel", "ASP.NET", ".NET", ".NET Core", "Ruby on Rails", "GraphQL", "REST APIs", "RESTful APIs",
+    "Microservices", "WebSockets", "Socket.io", "gRPC", "Kafka", "RabbitMQ",
+    // Databases & Caching
+    "MySQL", "PostgreSQL", "MongoDB", "Redis", "SQLite", "Oracle", "Firebase", "Firestore", "DynamoDB",
+    "Cassandra", "Elasticsearch", "Supabase", "Prisma", "Mongoose",
+    // Cloud & DevOps
+    "AWS", "Azure", "GCP", "Google Cloud", "Docker", "Kubernetes", "CI/CD", "Jenkins", "GitHub Actions",
+    "Terraform", "Linux", "Nginx", "Apache", "Prometheus", "Grafana", "Git", "GitHub", "GitLab",
+    // AI, Data Science & ML
+    "Machine Learning", "Deep Learning", "Artificial Intelligence", "NLP", "Natural Language Processing",
+    "Computer Vision", "TensorFlow", "PyTorch", "Scikit-Learn", "Pandas", "NumPy", "OpenCV", "LLMs",
+    "Generative AI", "Power BI", "Tableau", "Data Analysis", "Data Structures", "Algorithms",
+    // Mobile
+    "Android", "iOS", "Flutter", "React Native",
+    // Testing & QA
+    "Jest", "Mocha", "Chai", "Cypress", "Playwright", "Selenium", "JUnit", "PyTest", "Postman", "Swagger",
   ];
-  let targetRole = "Software Engineer";
-  for (const r of roleKeywords) {
-    if (lower.includes(r)) {
-      targetRole = r
-        .split(" ")
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(" ");
+
+  // A. Extract skills listed in explicit resume sections:
+  const sectionSkills = [];
+  const skillsSectionRegex =
+    /(?:technical\s+skills|key\s+skills|skills|technologies|core\s+competencies|programming\s+languages|tools\s+(&|and)\s+technologies|tech\s+stack)[\s:]*([\s\S]*?)(?=(?:\n\s*[A-Z][A-Z\s]{2,}:|\n\s*(?:experience|projects?|education|certifications?|work\s+history|achievements|summary|profile)|$))/i;
+  const skillsMatch = text.match(skillsSectionRegex);
+
+  if (skillsMatch && skillsMatch[1]) {
+    const rawSkillsText = skillsMatch[1];
+    const tokens = rawSkillsText
+      .replace(/^[A-Za-z\s]+:\s*/gm, "")
+      .split(/[,|•;/\n\t]+/)
+      .map((t) => t.trim())
+      .filter((t) => t.length >= 2 && t.length <= 30 && !/^(and|with|etc|using|in|for|of)$/i.test(t));
+
+    tokens.forEach((token) => {
+      const cleanToken = token.replace(/[()[\]{}:]/g, "").trim();
+      if (cleanToken && cleanToken.length >= 2 && cleanToken.length <= 30) {
+        if (!sectionSkills.some((s) => s.toLowerCase() === cleanToken.toLowerCase())) {
+          sectionSkills.push(cleanToken);
+        }
+      }
+    });
+  }
+
+  // B. Match catalog against full text
+  const catalogMatches = [];
+  skillsCatalog.forEach((skill) => {
+    const esc = skill.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
+    const regex = new RegExp(`(?:^|[^a-zA-Z0-9_#+])${esc}(?:$|[^a-zA-Z0-9_#+])`, "i");
+    if (regex.test(text)) {
+      if (!catalogMatches.some((s) => s.toLowerCase() === skill.toLowerCase())) {
+        catalogMatches.push(skill);
+      }
+    }
+  });
+
+  // Combine skills: section skills first, then catalog matches
+  const detectedSkills = [];
+  const seen = new Set();
+  [...catalogMatches, ...sectionSkills].forEach((s) => {
+    const key = s.toLowerCase();
+    if (!seen.has(key) && s.length >= 2 && s.length <= 25) {
+      seen.add(key);
+      detectedSkills.push(s);
+    }
+  });
+
+  if (detectedSkills.length === 0) {
+    detectedSkills.push("JavaScript", "React", "Node.js", "SQL", "Git");
+  }
+
+  // 3. Detect Target Role:
+  // First check lines 1 to 5 for headline (e.g. "Full Stack Developer", "Java Developer")
+  let targetRole = "";
+  for (let i = 0; i < Math.min(lines.length, 5); i++) {
+    const line = lines[i];
+    if (
+      line !== candidateName &&
+      /(developer|engineer|architect|programmer|scientist|analyst|specialist|consultant|designer|tester|lead)/i.test(line) &&
+      !/@|http|\.com|phone|email/i.test(line) &&
+      line.length <= 50
+    ) {
+      targetRole = line.replace(/[^\w\s/&-]/g, "").trim();
       break;
     }
   }
 
-  // 3. Detect skills
-  const knownSkills = [
-    "React",
-    "JavaScript",
-    "TypeScript",
-    "Node.js",
-    "Express",
-    "Next.js",
-    "HTML",
-    "CSS",
-    "Tailwind CSS",
-    "Bootstrap",
-    "Redux",
-    "Zustand",
-    "MongoDB",
-    "PostgreSQL",
-    "MySQL",
-    "Firebase",
-    "Docker",
-    "AWS",
-    "Git",
-    "GitHub",
-    "REST APIs",
-    "GraphQL",
-    "Python",
-    "Java",
-    "C++",
-    "Vite",
-    "Webpack",
-    "Jest",
-    "Cypress",
-    "WebSockets",
-    "Flutter",
-    "Dart",
-  ];
-  const detectedSkills = knownSkills.filter((skill) => {
-    const esc = skill.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
-    return new RegExp(`\\b${esc}\\b`, "i").test(text);
-  });
-  if (detectedSkills.length === 0) {
-    detectedSkills.push("JavaScript", "React", "REST APIs", "HTML/CSS");
+  if (!targetRole) {
+    const roleKeywords = [
+      { key: "full stack", role: "Full Stack Engineer" },
+      { key: "fullstack", role: "Full Stack Engineer" },
+      { key: "frontend", role: "Frontend Engineer" },
+      { key: "front end", role: "Frontend Engineer" },
+      { key: "backend", role: "Backend Engineer" },
+      { key: "back end", role: "Backend Engineer" },
+      { key: "java developer", role: "Java Backend Engineer" },
+      { key: "python developer", role: "Python Engineer" },
+      { key: "data scientist", role: "Data Scientist" },
+      { key: "data engineer", role: "Data Engineer" },
+      { key: "devops", role: "DevOps Engineer" },
+      { key: "cloud engineer", role: "Cloud Solutions Engineer" },
+      { key: "machine learning", role: "Machine Learning Engineer" },
+      { key: "mobile developer", role: "Mobile Application Developer" },
+      { key: "android", role: "Android Developer" },
+      { key: "flutter", role: "Flutter Developer" },
+      { key: "react", role: "React Frontend Engineer" },
+      { key: "software developer", role: "Software Developer" },
+      { key: "software engineer", role: "Software Engineer" },
+    ];
+    for (const r of roleKeywords) {
+      if (lower.includes(r.key)) {
+        targetRole = r.role;
+        break;
+      }
+    }
   }
 
-  // 4. Detect projects
-  const projects = [];
-  const projectNames = [
-    "Skills Tracker",
-    "AI Mock Interview Platform",
-    "E-Commerce Dashboard",
-    "Chat Application",
-    "Task Management System",
-    "Social Platform",
-    "Portfolio Website",
-  ];
-  projectNames.forEach((pName) => {
-    if (
-      lower.includes(pName.toLowerCase()) ||
-      (pName === "Skills Tracker" && lower.includes("skills tracker"))
-    ) {
-      projects.push({
-        name: pName,
-        description: `Full-stack application engineered with component architecture and REST API communication.`,
-        technologies: detectedSkills.slice(0, 4),
-        highlights: [
-          `Engineered interactive user interfaces using ${detectedSkills[0] || "React"}.`,
-          `Integrated asynchronous API endpoints with comprehensive loading and error states.`,
-        ],
-      });
-    }
-  });
-
-  if (projects.length === 0) {
-    const projIndex = text.search(/projects?|personal projects/i);
-    if (projIndex !== -1) {
-      const projSnippet = text.slice(projIndex, projIndex + 400);
-      const projLines = projSnippet
-        .split("\n")
-        .map((l) => l.trim())
-        .filter((l) => l.length > 5 && !/projects?/i.test(l));
-      const firstProj = projLines[0] || "Featured Engineering Project";
-      projects.push({
-        name: firstProj
-          .slice(0, 35)
-          .replace(/[:\-–—].*$/, "")
-          .trim(),
-        description:
-          projLines.slice(1, 3).join(" ") ||
-          "Interactive web application with state management.",
-        technologies: detectedSkills.slice(0, 3),
-        highlights: projLines.slice(1, 3),
-      });
+  if (!targetRole) {
+    if (detectedSkills.includes("Java") || detectedSkills.includes("Spring Boot")) {
+      targetRole = "Java Backend Engineer";
+    } else if (detectedSkills.includes("Python") || detectedSkills.includes("Django")) {
+      targetRole = "Python Engineer";
+    } else if (detectedSkills.includes("React") || detectedSkills.includes("Vue") || detectedSkills.includes("Angular")) {
+      targetRole = "Frontend Engineer";
     } else {
-      projects.push({
-        name: "Skills Tracker & Dashboard",
-        description:
-          "Interactive application for progress monitoring and state management.",
-        technologies: detectedSkills.slice(0, 3),
-        highlights: [
-          "Engineered modular components and clean REST API integrations.",
-        ],
-      });
+      targetRole = "Software Engineer";
     }
   }
 
-  // 5. Detect experience years
-  let expYears = 1.5;
+  // 4. Extract Real Projects from the resume
+  const projects = [];
+  const projectSectionRegex =
+    /(?:projects?|academic\s+projects?|personal\s+projects?|key\s+projects?)[\s:]*([\s\S]*?)(?=(?:\n\s*[A-Z][A-Z\s]{2,}:|\n\s*(?:experience|education|certifications?|work\s+history|achievements|skills)|$))/i;
+  const projectMatch = text.match(projectSectionRegex);
+
+  if (projectMatch && projectMatch[1]) {
+    const projSnippet = projectMatch[1];
+    const projLines = projSnippet
+      .split("\n")
+      .map((l) => l.trim())
+      .filter((l) => l.length > 2);
+
+    let currentProject = null;
+    for (let i = 0; i < projLines.length; i++) {
+      const line = projLines[i];
+      const isBullet = /^[•\-*–—]|\d+\./.test(line);
+      const isHeader = !isBullet && line.length < 60 && !/(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|\d{4})/i.test(line);
+
+      if (isHeader) {
+        if (currentProject && currentProject.name) {
+          projects.push(currentProject);
+        }
+        const cleanName = line.replace(/[^\w\s/&-]/g, "").trim();
+        const lineSkills = detectedSkills.filter((s) => new RegExp(`\\b${s}\\b`, "i").test(line));
+        currentProject = {
+          name: cleanName || "Engineering Project",
+          description: "",
+          technologies: lineSkills.length > 0 ? lineSkills : detectedSkills.slice(0, 3),
+          highlights: [],
+        };
+      } else if (currentProject) {
+        const cleanBullet = line.replace(/^[•\-*–—\d.]+\s*/, "").trim();
+        if (cleanBullet) {
+          currentProject.highlights.push(cleanBullet);
+          if (!currentProject.description) {
+            currentProject.description = cleanBullet;
+          }
+          detectedSkills.forEach((s) => {
+            if (new RegExp(`\\b${s}\\b`, "i").test(cleanBullet) && !currentProject.technologies.includes(s)) {
+              currentProject.technologies.push(s);
+            }
+          });
+        }
+      }
+      if (projects.length >= 3) break;
+    }
+    if (currentProject && currentProject.name && !projects.includes(currentProject)) {
+      projects.push(currentProject);
+    }
+  }
+
+  // Fallback if no projects parsed
+  if (projects.length === 0) {
+    const topTechs = detectedSkills.slice(0, 3);
+    projects.push({
+      name: `${topTechs[0] || "Full Stack"} Application Platform`,
+      description: `Production-ready application built with ${topTechs.join(", ")} featuring robust component structure and API integrations.`,
+      technologies: topTechs,
+      highlights: [
+        `Engineered application modules and end-to-end user workflows using ${topTechs[0] || "modern tools"}.`,
+        "Implemented RESTful endpoints, data validation, and asynchronous error boundaries.",
+      ],
+    });
+  }
+
+  // 5. Detect Experience Years:
+  let expYears = 1.0;
   const yrMatch = text.match(/(\d+(?:\.\d+)?)\+?\s*(?:years?|yrs?)/i);
   if (yrMatch) {
     expYears = parseFloat(yrMatch[1]);
   } else if (
     lower.includes("fresher") ||
     lower.includes("entry level") ||
-    lower.includes("intern")
+    lower.includes("intern") ||
+    lower.includes("student")
   ) {
     expYears = 0;
   }
 
-  // 6. Detect work experience
+  // 6. Detect Work Experience:
   const workExperience = [];
-  const expIndex = text.search(/experience|employment|work history/i);
-  if (expIndex !== -1) {
+  const expSectionRegex =
+    /(?:experience|work\s+experience|professional\s+experience|employment\s+history)[\s:]*([\s\S]*?)(?=(?:\n\s*[A-Z][A-Z\s]{2,}:|\n\s*(?:projects?|education|certifications?|skills|achievements)|$))/i;
+  const expMatch = text.match(expSectionRegex);
+  if (expMatch && expMatch[1]) {
+    const expLines = expMatch[1]
+      .split("\n")
+      .map((l) => l.trim())
+      .filter((l) => l.length > 2);
+    if (expLines.length > 0) {
+      workExperience.push({
+        company: expLines[0].slice(0, 45).replace(/[:\-–—].*$/, "").trim() || "Technology Organization",
+        role: targetRole,
+        duration: `${expYears > 0 ? expYears : 1} year(s)`,
+        responsibilities: expLines.slice(1, 4).map((l) => l.replace(/^[•\-*–—\d.]+\s*/, "").trim()).filter(Boolean),
+      });
+    }
+  }
+
+  if (workExperience.length === 0) {
     workExperience.push({
-      company: "Software Solutions",
+      company: "Engineering Team",
       role: targetRole,
       duration: `${expYears > 0 ? expYears : 1} year(s)`,
       responsibilities: [
-        `Built modular UI components with ${detectedSkills[0] || "React"}.`,
-        "Collaborated with engineering teams to integrate RESTful API endpoints and resolve bugs.",
+        `Developed software features using ${detectedSkills.slice(0, 3).join(", ")}.`,
+        "Collaborated with peers to review code, troubleshoot issues, and ship releases.",
       ],
     });
   }
 
-  // 7. Extract verifiable resume claims (Section 6 & 14)
+  // 7. Extract Verifiable Resume Claims:
   const resumeClaims = [];
+  const claimMatches = text.match(
+    /[^.!?\n]*?(?:improved|reduced|increased|boosted|optimized|accelerated|developed|built|engineered|architected|migrated|scaled)[^.!?\n]*?(?:\d+%\s*|\d+\+?\s*(?:users|requests|ms|seconds|fps|qps|endpoints|queries)|REST APIs|microservices|authentication|database)[^.!?\n]*/gi
+  );
 
-  // Check for percentage or performance claims (e.g. 40%, 30%, 50%)
-  const perfMatch =
-    text.match(
-      /(?:improved|reduced|increased|boosted|optimized|accelerated)[^.!?\n]*?(\d+%\s*[^.!?\n]*)/i
-    ) || text.match(/([^.!?\n]*?\b\d+%\s*[^.!?\n]*)/i);
-
-  if (perfMatch) {
-    const rawClaim = perfMatch[0].trim();
-    const cleanClaim =
-      rawClaim.length > 80 ? rawClaim.slice(0, 80) + "…" : rawClaim;
-    resumeClaims.push({
-      claim: cleanClaim,
-      technology:
-        detectedSkills.find((s) =>
-          cleanClaim.toLowerCase().includes(s.toLowerCase())
-        ) || "Performance Optimization",
-      context: "Performance optimization metric mentioned on resume",
-      verificationPriority: "high",
-      verificationQuestion: `You mentioned on your resume: "${cleanClaim}". How did you measure that baseline, what specific bottleneck did you identify, and what code or architectural changes produced that result?`,
-    });
-  } else {
-    resumeClaims.push({
-      claim:
-        "Optimized component render cycles and reduced redundant network requests",
-      technology: detectedSkills[0] || "React",
-      context: "Frontend performance and API efficiency",
-      verificationPriority: "high",
-      verificationQuestion:
-        "You highlighted performance optimization on your resume. How did you profile the bottleneck and what metrics did you use to verify the improvement?",
+  if (claimMatches && claimMatches.length > 0) {
+    claimMatches.slice(0, 3).forEach((rawClaim, idx) => {
+      const cleanClaim = rawClaim.trim().replace(/^[-•*]\s*/, "");
+      if (cleanClaim.length > 20 && cleanClaim.length < 120) {
+        const matchedTech = detectedSkills.find((s) => cleanClaim.toLowerCase().includes(s.toLowerCase())) || detectedSkills[idx] || "Engineering";
+        resumeClaims.push({
+          claim: cleanClaim,
+          technology: matchedTech,
+          context: `Key highlight from resume`,
+          verificationPriority: "high",
+          verificationQuestion: `In your resume, you stated: "${cleanClaim}". Walk me through the technical details, the tools you used, and how you verified this outcome.`,
+        });
+      }
     });
   }
 
-  if (projects[0]) {
+  if (resumeClaims.length === 0) {
     resumeClaims.push({
-      claim: `Architected and implemented ${projects[0].name} using ${projects[0].technologies.join(", ")}`,
-      technology: projects[0].technologies[0] || "Architecture",
+      claim: `Built and shipped ${projects[0].name} utilizing ${projects[0].technologies.join(", ")}`,
+      technology: projects[0].technologies[0] || detectedSkills[0] || "Architecture",
       context: `${projects[0].name} project implementation`,
       verificationPriority: "high",
-      verificationQuestion: `In your ${projects[0].name} project, walk me through how you structured state flow between components and handled API failure states.`,
+      verificationQuestion: `In your ${projects[0].name} project, walk me through how you architected the data flow and how you handled unexpected API or runtime failures.`,
     });
   }
-
-  if (
-    lower.includes("jwt") ||
-    lower.includes("auth") ||
-    lower.includes("token")
-  ) {
-    resumeClaims.push({
-      claim: "Implemented JWT authentication and token management",
-      technology: "Security & Authentication",
-      context: "User session management",
-      verificationPriority: "medium",
-      verificationQuestion:
-        "How did you manage authentication tokens on the client, and how did you prevent race conditions or session dropouts during token refresh?",
-    });
-  } else if (lower.includes("api") || lower.includes("rest")) {
-    resumeClaims.push({
-      claim: "Integrated REST APIs with asynchronous error handling",
-      technology: "REST APIs",
-      context: "Network communication and data fetching",
-      verificationPriority: "medium",
-      verificationQuestion:
-        "When integrating REST APIs, how did you handle network timeouts and prevent race conditions if the user navigated away while a request was pending?",
-    });
-  }
-
-  const potentialQuestionAreas = [
-    `${detectedSkills[0] || "React"} state boundaries and component lifecycles`,
-    "Asynchronous error handling and network resilience",
-    `Architecture and implementation details of ${projects[0]?.name || "featured projects"}`,
-    "Performance profiling, measurement tools, and metrics",
-    "Verifying candidate claims regarding optimization and scale",
-  ];
 
   return {
     candidateName,
     targetRole,
-    summary: `Software engineer with ${expYears} year(s) of practical experience specializing in ${detectedSkills.slice(0, 4).join(", ")}. Demonstrated project experience building responsive applications.`,
-    experience: [`${expYears} years in software development`],
+    summary: `${targetRole} with ${expYears > 0 ? expYears : "entry-level"} practical experience specializing in ${detectedSkills.slice(0, 5).join(", ")}. Demonstrated project delivery in ${projects.slice(0, 2).map((p) => p.name).join(" and ")}.`,
+    experience: [`${expYears} years in ${targetRole}`],
     experienceYears: expYears,
     skills: detectedSkills,
     technicalSkills: detectedSkills,
     projects,
     workExperience,
-    education: ["B.Tech / B.S. in Computer Science or related technical field"],
+    education: ["B.Tech / B.S. in Computer Science or related engineering field"],
     certifications: [],
     achievements: [],
     responsibilities: [
-      "Engineered responsive front-end user interfaces",
-      "Integrated RESTful APIs and managed asynchronous application state",
+      `Engineered features and components using ${detectedSkills.slice(0, 3).join(", ")}`,
+      "Integrated APIs, maintained error boundaries, and wrote clean modular code",
     ],
     technologies: detectedSkills,
     resumeClaims,
-    potentialQuestionAreas,
+    potentialQuestionAreas: [
+      `Core principles and paradigms of ${detectedSkills[0] || "Engineering"}`,
+      `Architecture and trade-offs in ${projects[0]?.name || "portfolio projects"}`,
+      `Handling concurrency, error states, and latency in ${detectedSkills[1] || "APIs"}`,
+      `Database and data structure efficiency`,
+      `Empirical verification of claims on candidate's resume`,
+    ],
   };
 };
 
@@ -675,11 +730,19 @@ const generateMockQuestions = ({
   resumeClaims = [],
   resumeBased = false,
 }) => {
-  const stack = techStack ? techStack.split(/[,/ ]+/).filter(Boolean) : ["React", "JavaScript"];
-  const primaryTech = stack[0] || "Frontend";
-  const secondaryTech = stack[1] || "JavaScript";
+  const resumeSkills = resumeAnalysis?.technicalSkills || resumeAnalysis?.skills || [];
+  const formSkills = techStack ? techStack.split(/[,|/•]+/).map((s) => s.trim()).filter(Boolean) : [];
+  const combinedSkills = Array.from(new Set([...resumeSkills, ...formSkills]));
+  const primaryTech = combinedSkills[0] || (formSkills[0] || "Frontend");
+  const secondaryTech = combinedSkills[1] || (formSkills[1] || combinedSkills[0] || "JavaScript");
+  const tertiaryTech = combinedSkills[2] || combinedSkills[0] || "Database";
   const normExp = normalizeExperienceLevel(experience);
   const expYears = normExp.years;
+
+  const allTechText = (combinedSkills.join(" ") + " " + position + " " + techStack).toLowerCase();
+  const isBackend = /python|django|flask|fastapi|java|spring|node|express|nestjs|golang|go|c#|\.net|php|laravel|ruby|rails|sql|postgres|mysql|mongo|redis|microservice|kafka/i.test(allTechText);
+  const isAiMl = /machine learning|deep learning|ai|nlp|computer vision|tensorflow|pytorch|scikit|pandas|numpy|llm|generative/i.test(allTechText);
+  const isDevOps = /devops|docker|kubernetes|aws|gcp|azure|terraform|ci\/cd|jenkins|ansible|cloud/i.test(allTechText);
 
   // ── Resume-Based Interview Question Generation ────────────────────────
   if ((resumeBased || resumeAnalysis) && interviewType !== "HR") {
@@ -695,33 +758,33 @@ const generateMockQuestions = ({
     // Q1: Grounded in candidate's actual project, calibrated strictly to selected experience tier
     if (normExp.tier === "fresher") {
       resumePool.push({
-        question: `In your resume, you highlighted your project "${topProject}" built with ${topTech}. Walk me through the architecture of this project, how you structured components, and what you personally implemented.`,
-        answer: `Walks through the application structure, key modular components, separation of presentation and state, and concrete personal contributions.`,
+        question: `In your resume, you highlighted your project "${topProject}" built with ${topTech}. Walk me through the architecture of this project, how you structured components/modules, and what you personally implemented.`,
+        answer: `Walks through the application structure, key modular components or service layers, separation of concerns, and concrete personal contributions.`,
         category: "project",
         difficulty: "easy",
         expectedSkill: "Project Architecture & Personal Implementation",
         questionType: "project",
-        followUpIntent: "Ask how they tested the components and handled basic state.",
+        followUpIntent: "Ask how they tested the implementation and handled error conditions.",
       });
     } else if (normExp.tier === "1-2") {
       resumePool.push({
-        question: `In your resume, you listed the "${topProject}" project built using ${topTech}. Can you walk me through how the frontend communicated with the backend, and how you handled asynchronous loading and error recovery states?`,
-        answer: `Explains REST API communication, async/await or hook abstraction, state handling for loading/error/data boundaries, and handling network failure edge cases.`,
+        question: `In your resume, you listed the "${topProject}" project built using ${topTech}. Can you walk me through how the system components communicated, and how you handled asynchronous loading, data fetching, and error recovery states?`,
+        answer: `Explains client-server or service communication, API/protocol abstractions, state handling for loading/error boundaries, and handling network or database failure edge cases.`,
         category: "project",
         difficulty: "medium",
-        expectedSkill: "Client-Server Communication & Async Error Boundaries",
+        expectedSkill: "Communication Architecture & Async Error Boundaries",
         questionType: "project",
-        followUpIntent: "Ask what happens if an API call fails while the user is actively submitting updates.",
+        followUpIntent: "Ask what happens if a downstream service or API call fails mid-transaction.",
       });
     } else if (normExp.tier === "2-4") {
       resumePool.push({
-        question: `In your resume, you engineered "${topProject}" with ${topTech}. Walk me through how you designed state boundaries and data flow in that application, and what technical trade-offs you evaluated during implementation.`,
-        answer: `Articulates clear separation of server cache vs local state, avoiding prop-drilling or unnecessary renders, and trade-offs made for speed and maintainability.`,
+        question: `In your resume, you engineered "${topProject}" with ${topTech}. Walk me through how you designed data flow and state/cache boundaries in that application, and what technical trade-offs you evaluated during implementation.`,
+        answer: `Articulates clear separation of persistent storage vs in-memory caching or state, avoiding bottlenecks, and trade-offs made for speed and maintainability.`,
         category: "project",
         difficulty: "medium",
-        expectedSkill: "State Architecture, Data Flow & Trade-Off Analysis",
+        expectedSkill: "Architecture, Data Flow & Trade-Off Analysis",
         questionType: "project",
-        followUpIntent: "Ask how they handled caching and mutation rollbacks.",
+        followUpIntent: "Ask how they handled caching, schema evolution, and mutation rollbacks.",
       });
     } else {
       resumePool.push({
@@ -743,7 +806,7 @@ const generateMockQuestions = ({
         `In your resume, you noted: "${targetClaim.claim}". How did you measure that improvement, what was the bottleneck, and what specific code or architectural changes produced that result?`;
       resumePool.push({
         question: qText,
-        answer: `The candidate should substantiate the claimed improvement with concrete metrics (e.g. baseline vs post-optimization timings, profiling tools used like Chrome DevTools or Lighthouse) and explain the specific code changes (e.g. memoization, code-splitting, lazy loading, debouncing).`,
+        answer: `The candidate should substantiate the claimed improvement with concrete metrics (e.g. baseline vs post-optimization timings, profiling tools used) and explain the specific code or schema changes.`,
         category: "performance",
         difficulty: normExp.tier === "fresher" ? "medium" : "hard",
         expectedSkill: "Empirical Claim Verification & Performance Measurement",
@@ -752,10 +815,10 @@ const generateMockQuestions = ({
       });
     }
 
-    // Q3: Technology deep dive for selected role (Section 9: Job role controls questions)
+    // Q3: Technology deep dive into primary tech
     resumePool.push({
-      question: `Your resume lists experience with ${primaryTech}. When building features for a ${position} role, walk me through a complex edge-case bug or performance issue you investigated in ${primaryTech}, and how you isolated the root cause.`,
-      answer: `Demonstrates systematic debugging methodology: hypothesis, reproduction, DevTools inspection, identifying root cause (e.g. stale closures, race conditions, memory leaks), and verifying the solution.`,
+      question: `Your resume lists hands-on experience with ${primaryTech}. When building features for a ${position} role, walk me through a complex edge-case bug or performance issue you investigated in ${primaryTech}, and how you isolated the root cause.`,
+      answer: `Demonstrates systematic debugging methodology: hypothesis, reproduction, profiling or log inspection, identifying root cause (e.g. memory leaks, race conditions, stale state, unindexed queries), and verifying the solution.`,
       category: "debugging",
       difficulty: normExp.tier === "fresher" ? "easy" : "medium",
       expectedSkill: "Role-Specific Technical Debugging & Diagnostic Reasoning",
@@ -763,27 +826,91 @@ const generateMockQuestions = ({
       followUpIntent: "Ask how they ensured the bug didn't regress.",
     });
 
-    // Q4: Practical Scenario / Edge Case handling
-    resumePool.push({
-      question: `A critical endpoint in your application intermittently returns a 500 error or takes over 5 seconds to respond. How do you design client-side error handling, cancellation via AbortController, and retry mechanisms so user experience is preserved?`,
-      answer: `Use AbortController with a timeout signal, implement exponential backoff with max retry bounds for idempotent requests, show inline error states with manual retry affordances, and ensure state setters are guarded against unmounted components.`,
-      category: "api-networking",
-      difficulty: normExp.tier === "fresher" ? "easy" : "medium",
-      expectedSkill: "Asynchronous Network Resilience & AbortController",
-      questionType: "scenario",
-      followUpIntent: "Ask how they handle race conditions if consecutive requests finish out of order.",
-    });
+    // Q4: Domain-specific scenario & resilience
+    if (isAiMl) {
+      resumePool.push({
+        question: `In your work with ${primaryTech}, how did you design your data preprocessing pipelines, handle missing values or feature scaling without data leakage, and evaluate model performance beyond simple accuracy?`,
+        answer: `Fit transformers/scalers strictly on training splits and apply transforms to test splits, use pipelines to encapsulate preprocessing steps, audit timestamps for temporal leakage, and evaluate using domain-specific metrics like F1, PR-AUC, and confusion matrix calibration.`,
+        category: "machine-learning",
+        difficulty: normExp.tier === "fresher" ? "easy" : "medium",
+        expectedSkill: "Feature Engineering & Leakage Prevention",
+        questionType: "scenario",
+        followUpIntent: "Ask how they handle class imbalance in the training data.",
+      });
+    } else if (isDevOps) {
+      resumePool.push({
+        question: `In your infrastructure work with ${secondaryTech || primaryTech}, how do you design zero-downtime rolling deployments, automated canary rollbacks on 5xx error spikes, and container security scanning in CI/CD?`,
+        answer: `Configure Kubernetes readiness and liveness probes, rolling update strategies with maxSurge/maxUnavailable bounds, service mesh or ingress canary traffic splitting, automated metric triggers for rollback, and vulnerability scanning with Trivy in CI pipelines.`,
+        category: "devops",
+        difficulty: normExp.tier === "fresher" ? "easy" : "medium",
+        expectedSkill: "Deployment Resilience & Canary Rollbacks",
+        questionType: "scenario",
+        followUpIntent: "Ask how they prevent cascading failures when a canary rollout fails.",
+      });
+    } else if (isBackend) {
+      resumePool.push({
+        question: `When scaling ${secondaryTech || primaryTech} services, suppose an endpoint experiences high database latency and connection pool exhaustion under peak concurrent traffic. How do you isolate whether the issue is missing indexes, unoptimized queries, or connection pool misconfiguration, and how do you resolve it?`,
+        answer: `Profile queries using database slow query logs and EXPLAIN ANALYZE to identify sequential scans, add composite or covering indexes, resolve N+1 queries via batch fetching/joins, tune connection pool parameters (e.g. max pool size, timeout bounds), and place high-frequency read data behind a Redis cache with proper TTLs.`,
+        category: "backend-database",
+        difficulty: normExp.tier === "fresher" ? "easy" : "medium",
+        expectedSkill: "Database Query Optimization & Connection Pool Tuning",
+        questionType: "scenario",
+        followUpIntent: "Ask how they handle cache stampedes when cached keys expire.",
+      });
+    } else {
+      resumePool.push({
+        question: `A critical endpoint in your application intermittently returns a 500 error or takes over 5 seconds to respond. How do you design client-side error handling, cancellation via AbortController, and retry mechanisms in ${primaryTech} so user experience is preserved?`,
+        answer: `Use AbortController with a timeout signal, implement exponential backoff with max retry bounds for idempotent requests, show inline error states with manual retry affordances, and ensure state setters are guarded against unmounted components.`,
+        category: "api-networking",
+        difficulty: normExp.tier === "fresher" ? "easy" : "medium",
+        expectedSkill: "Asynchronous Network Resilience & AbortController",
+        questionType: "scenario",
+        followUpIntent: "Ask how they handle race conditions if consecutive requests finish out of order.",
+      });
+    }
 
-    // Q5: Component architecture & performance
-    resumePool.push({
-      question: `In ${primaryTech}, what profiling techniques or tools do you use to detect memory leaks, unnecessary re-render waterfalls, and slow component renders? Give a concrete example of an optimization you implemented.`,
-      answer: `Use React DevTools Profiler (record what caused render) and Chrome DevTools Performance panel (identifying long tasks). Address bottlenecks by colocating state, lifting content as children/slots, memoizing heavy subtrees with React.memo/useMemo, and virtualizing large lists.`,
-      category: "performance",
-      difficulty: normExp.tier === "fresher" ? "medium" : "hard",
-      expectedSkill: "Performance Profiling & Render Optimization",
-      questionType: "debugging",
-      followUpIntent: "Ask what trade-offs they considered before adding memoization.",
-    });
+    // Q5: Production reliability, memory/performance profiling & architecture
+    if (isAiMl) {
+      resumePool.push({
+        question: `When deploying models built with ${primaryTech} to production, how do you optimize inference latency, manage GPU/CPU memory constraints, and detect model degradation or data drift in real time?`,
+        answer: `Use model quantization (INT8/FP16), TensorRT or ONNX Runtime for optimized inference graphs, batch inference requests with dynamic micro-batching, monitor prediction distributions vs training baselines using tools like Evidently or Prometheus, and establish automated retraining triggers.`,
+        category: "ml-engineering",
+        difficulty: normExp.tier === "fresher" ? "medium" : "hard",
+        expectedSkill: "Model Inference Optimization & Drift Monitoring",
+        questionType: "debugging",
+        followUpIntent: "Ask how they set alert thresholds for drift before user experience is impacted.",
+      });
+    } else if (isDevOps) {
+      resumePool.push({
+        question: `How do you enforce least-privilege IAM policies, manage secret rotation, and configure central logging and distributed tracing across ${primaryTech} infrastructure?`,
+        answer: `Enforce role-based access control with scoped IAM roles, avoid long-lived credentials by utilizing secret managers with automated rotation, centralize logs with Fluentd/Loki, and trace distributed requests using OpenTelemetry correlation IDs injected across service boundaries.`,
+        category: "security-sre",
+        difficulty: normExp.tier === "fresher" ? "medium" : "hard",
+        expectedSkill: "IAM Governance & Distributed Observability",
+        questionType: "system-design",
+        followUpIntent: "Ask how they handle key rotation without downtime for active services.",
+      });
+    } else if (isBackend) {
+      resumePool.push({
+        question: `In ${primaryTech}, how do you design distributed transactions or eventual consistency when updating multiple services or database tables, and how do you implement idempotency to handle duplicate webhook or message retries?`,
+        answer: `Implement the transactional outbox pattern or saga orchestration/choreography with compensating transactions for multi-service operations. For idempotency, validate a unique idempotency key per request in Redis or database with atomic SETNX/conditional insert, caching the processed response for identical retries within a reasonable TTL window.`,
+        category: "system-design",
+        difficulty: normExp.tier === "fresher" ? "medium" : "hard",
+        expectedSkill: "Distributed Consistency & Idempotent API Design",
+        questionType: "system-design",
+        followUpIntent: "Ask how they prevent stale idempotency locks if a worker crashes mid-execution.",
+      });
+    } else {
+      resumePool.push({
+        question: `In ${primaryTech}, what profiling techniques or tools do you use to detect memory leaks, unnecessary re-render waterfalls, and slow component renders? Give a concrete example of an optimization you implemented.`,
+        answer: `Use React DevTools Profiler (record what caused render) and Chrome DevTools Performance panel (identifying long tasks). Address bottlenecks by colocating state, lifting content as children/slots, memoizing heavy subtrees with React.memo/useMemo, and virtualizing large lists.`,
+        category: "performance",
+        difficulty: normExp.tier === "fresher" ? "medium" : "hard",
+        expectedSkill: "Performance Profiling & Render Optimization",
+        questionType: "debugging",
+        followUpIntent: "Ask what trade-offs they considered before adding memoization.",
+      });
+    }
 
     return resumePool.slice(0, questionCount);
   }

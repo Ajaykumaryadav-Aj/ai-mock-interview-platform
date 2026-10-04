@@ -76,8 +76,8 @@ export const useFirebaseAuthBridge = () => {
           const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || "ai-interview-1842f";
           const region = "us-central1";
           const candidateUrls = [
-            `http://127.0.0.1:5001/ai-interview-project-react/${region}/exchangeToken`,
             `http://127.0.0.1:5001/${projectId}/${region}/exchangeToken`,
+            `http://127.0.0.1:5001/ai-interview-project-react/${region}/exchangeToken`,
           ];
           for (const url of candidateUrls) {
             try {

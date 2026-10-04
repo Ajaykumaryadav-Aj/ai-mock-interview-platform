@@ -5,11 +5,7 @@ import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 
 const isEmulator = import.meta.env.VITE_USE_EMULATOR === "true";
 
-// In emulator mode, project ID must match the emulator instance ("ai-interview-project-react")
-// so that Auth tokens and Firestore operations share the exact same project scope.
-const projectId = isEmulator
-  ? "ai-interview-project-react"
-  : import.meta.env.VITE_FIREBASE_PROJECT_ID || "ai-interview-1842f";
+const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || "ai-interview-1842f";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,

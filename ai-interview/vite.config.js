@@ -22,6 +22,11 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       proxy: {
+        "/api/exchangeToken": {
+          target: "http://127.0.0.1:5001/ai-interview-1842f/us-central1",
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api\/exchangeToken/, "/exchangeToken"),
+        },
         "/api": {
           target: apiTarget,
           changeOrigin: true,
