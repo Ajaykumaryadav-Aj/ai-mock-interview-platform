@@ -62,7 +62,8 @@ if (import.meta.env.VITE_USE_EMULATOR === "true") {
       `[Firebase] 🔧 DEV MODE — connected to emulators:\n` +
       `  Auth      → http://${EMULATOR_HOST}:${EMULATOR_PORTS.auth}\n` +
       `  Firestore → http://${EMULATOR_HOST}:${EMULATOR_PORTS.firestore}\n` +
-      `  Functions → http://${EMULATOR_HOST}:${EMULATOR_PORTS.functions}`
+      `  Functions → http://${EMULATOR_HOST}:${EMULATOR_PORTS.functions}\n` +
+      `  💡 If you see net::ERR_CONNECTION_REFUSED, start emulators with 'npm run emulators' or set VITE_USE_EMULATOR=false in .env.local to use live Firebase.`
     );
   }
 }

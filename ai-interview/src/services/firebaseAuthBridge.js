@@ -96,6 +96,25 @@ export const useFirebaseAuthBridge = () => {
               // Try next candidate
             }
           }
+
+          // Fallback if local emulator endpoints are unreachable
+          if (!response) {
+            console.warn(
+              "[firebaseAuthBridge] Local Functions emulator unreachable on port 5001. Falling back to /api/exchangeToken..."
+            );
+            const fallbackEndpoint = import.meta.env.VITE_EXCHANGE_TOKEN_URL || "/api/exchangeToken";
+            try {
+              response = await fetch(fallbackEndpoint, {
+                method: "POST",
+                headers: {
+                  authorization: `Bearer ${clerkToken}`,
+                  "content-type": "application/json",
+                },
+              });
+            } catch (fallbackErr) {
+              console.warn("[firebaseAuthBridge] Fallback error calling /api/exchangeToken:", fallbackErr.message);
+            }
+          }
         } else {
           // Production: Vercel Serverless API Function
           const endpoint = import.meta.env.VITE_EXCHANGE_TOKEN_URL || "/api/exchangeToken";
