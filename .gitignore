@@ -1,0 +1,27 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Dependencies and build outputs
+node_modules
+dist
+dist-ssr
+.vercel
+.firebase
+
+# Sensitive secrets & environment files (NEVER commit secrets)
+*.local
+.env
+.env.*
+!.env.example
+service-account*.json
+firebase-adminsdk*.json
+*.pem
+*.key
+
+# Editor files
+.vscode/
+.idea/
+.DS_Store

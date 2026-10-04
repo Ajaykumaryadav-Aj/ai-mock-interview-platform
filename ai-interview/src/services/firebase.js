@@ -9,7 +9,7 @@ const isEmulator = import.meta.env.VITE_USE_EMULATOR === "true";
 // so that Auth tokens and Firestore operations share the exact same project scope.
 const projectId = isEmulator
   ? "ai-interview-project-react"
-  : import.meta.env.VITE_FIREBASE_PROJECT_ID;
+  : import.meta.env.VITE_FIREBASE_PROJECT_ID || "ai-interview-1842f";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,

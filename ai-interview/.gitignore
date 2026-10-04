@@ -8,13 +8,21 @@ pnpm-debug.log*
 lerna-debug.log*
 pnpm-lock.yaml
 
+# Build & Dependencies
 node_modules
 dist
 dist-ssr
+.vercel
+
+# Environment variables & secrets (NEVER commit secrets)
 *.local
 .env
 .env.*
 !.env.example
+service-account*.json
+firebase-adminsdk*.json
+*.pem
+*.key
 
 # Editor directories and files
 .vscode/*

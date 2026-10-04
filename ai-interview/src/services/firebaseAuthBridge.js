@@ -19,8 +19,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { signInWithCustomToken, signOut, onAuthStateChanged } from "firebase/auth";
-import { httpsCallable } from "firebase/functions";
-import { auth, functions } from "./firebase";
+import { auth } from "./firebase";
 
 /**
  * useFirebaseAuthBridge
@@ -28,9 +27,9 @@ import { auth, functions } from "./firebase";
  * Drop-in React hook — mount once at the top of your app (inside AuthHandler).
  * Keeps Firebase Auth synchronized with the Clerk session.
  *
- * In development (VITE_USE_EMULATOR=true) the exchangeToken call goes to the
- * local Functions emulator automatically via the Firebase SDK.
- * In production it goes to the deployed Cloud Function.
+ * In production it calls the Vercel Serverless Function `/api/exchangeToken`.
+ * In development (VITE_USE_EMULATOR=true) the exchangeToken call routes to the
+ * local Functions emulator.
  */
 export const useFirebaseAuthBridge = () => {
   const { isSignedIn, isLoaded, getToken, sessionId } = useAuth();
@@ -67,26 +66,15 @@ export const useFirebaseAuthBridge = () => {
           return;
         }
 
-        // 2. Call the exchangeToken Cloud Function.
-        //    The Firebase Functions SDK routes to emulator or production
-        //    based on whether connectFunctionsEmulator() was called in firebase.js.
-        //    We use a raw fetch rather than httpsCallable because our function
-        //    reads the Authorization header directly (not the httpsCallable data envelope).
-        const exchangeTokenFn = httpsCallable(functions, "exchangeToken");
-
-        // httpsCallable wraps data in { data: ... } — our function expects a
-        // Bearer header, not a JSON body. So we fetch the URL directly using
-        // the Functions SDK's resolved URL helper.
-        // The cleanest approach: derive the URL from the SDK's internal config.
-        //
-        // For emulator: http://127.0.0.1:5001/<projectId>/<region>/exchangeToken
-        // For production: https://<region>-<projectId>.cloudfunctions.net/exchangeToken
-        const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
-        const region = "us-central1";
+        // 2. Call exchangeToken
+        //    In local emulator mode: test emulator URLs on 127.0.0.1:5001.
+        //    In production: call Vercel Serverless Function /api/exchangeToken (never calls localhost or Cloud Functions).
         const isEmulator = import.meta.env.VITE_USE_EMULATOR === "true";
-
         let response;
+
         if (isEmulator) {
+          const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || "ai-interview-1842f";
+          const region = "us-central1";
           const candidateUrls = [
             `http://127.0.0.1:5001/ai-interview-project-react/${region}/exchangeToken`,
             `http://127.0.0.1:5001/${projectId}/${region}/exchangeToken`,
@@ -104,14 +92,15 @@ export const useFirebaseAuthBridge = () => {
                 response = res;
                 break;
               }
-            } catch (err) {
+            } catch {
               // Try next candidate
             }
           }
         } else {
-          const functionUrl = `https://${region}-${projectId}.cloudfunctions.net/exchangeToken`;
+          // Production: Vercel Serverless API Function
+          const endpoint = import.meta.env.VITE_EXCHANGE_TOKEN_URL || "/api/exchangeToken";
           try {
-            response = await fetch(functionUrl, {
+            response = await fetch(endpoint, {
               method: "POST",
               headers: {
                 authorization: `Bearer ${clerkToken}`,
@@ -119,7 +108,7 @@ export const useFirebaseAuthBridge = () => {
               },
             });
           } catch (networkErr) {
-            console.error("[firebaseAuthBridge] Network error calling exchangeToken:", networkErr.message);
+            console.error("[firebaseAuthBridge] Network error calling /api/exchangeToken:", networkErr.message);
             return;
           }
         }

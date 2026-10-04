@@ -80,6 +80,54 @@ const withRetry = async (fn, label) => {
 };
 
 /**
+ * Executes a Gemini request via the secure server-side proxy /api/gemini.
+ * Falls back to client-side GoogleGenAI client if VITE_GEMINI_API_KEY is available (e.g. offline dev).
+ */
+const callGeminiInteraction = async ({ model = "gemini-3.8-flash", input, response_format }) => {
+  try {
+    const res = await fetch("/api/gemini", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ model, input, response_format }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      return { output_text: data.output_text };
+    }
+
+    if (res.status === 429) {
+      const errData = await res.json().catch(() => ({}));
+      const err = new Error(errData.error || "AI rate limit reached.");
+      err.status = 429;
+      throw err;
+    }
+
+    if (res.status === 404) {
+      // Local Vite dev server without Vercel CLI — fallback to local client SDK
+    } else {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || `Gemini proxy error HTTP ${res.status}`);
+    }
+  } catch (fetchErr) {
+    if (fetchErr?.status === 429) throw fetchErr;
+    if (!fetchErr.message?.includes("404") && !fetchErr.message?.includes("Failed to fetch")) {
+      console.warn("[Gemini] /api/gemini request error, trying local SDK fallback:", fetchErr.message);
+    }
+  }
+
+  // Client-side fallback if VITE_GEMINI_API_KEY is available in dev
+  const client = getGeminiClient();
+  return await client.interactions.create({
+    model,
+    input,
+    ...(response_format ? { response_format } : {}),
+  });
+};
+
+/**
  * Normalizes user-selected or freeform experience into standard tiers.
  * Maps:
  * - "Fresher (0 yr)", 0, "0", "0-1", "entry", "fresher" -> { tier: "fresher", years: 0, label: "Fresher / Entry Level (0 yr)" }
@@ -460,8 +508,6 @@ export const analyzeResume = async (resumeText) => {
     return generateMockResumeAnalysis(resumeText);
   }
 
-  const ai = getGeminiClient();
-
   const prompt = `You are an expert Technical Recruiter and Engineering Hiring Manager analyzing a candidate's resume for a software engineering interview.
 Extract detailed, factual structured information from the provided resume text.
 
@@ -486,7 +532,7 @@ ${resumeText.slice(0, 15000)}
   try {
     const interaction = await withRetry(
       () =>
-        ai.interactions.create({
+        callGeminiInteraction({
           model: "gemini-3.8-flash",
           input: prompt,
           response_format: {
@@ -1147,7 +1193,6 @@ export const generateInterviewQuestions = async ({
     });
   }
 
-  const ai = getGeminiClient();
   const normExp = normalizeExperienceLevel(experience);
   const claims =
     resumeClaims && resumeClaims.length > 0
@@ -1217,7 +1262,7 @@ CRITICAL 2026 INTERVIEW QUALITY GUIDELINES:
   try {
     const interaction = await withRetry(
       () =>
-        ai.interactions.create({
+        callGeminiInteraction({
           model: "gemini-3.8-flash",
           input: prompt,
           response_format: {
@@ -1343,8 +1388,6 @@ export const evaluateAnswer = async ({
     return generateMockEvaluation({ question, correctAnswer, userAnswer });
   }
 
-  const ai = getGeminiClient();
-
   const prompt = `You are a Senior Technical Interviewer evaluating a candidate's response in a modern 2026 software engineering interview.
 Compare the user's answer to the model answer.
 
@@ -1373,7 +1416,7 @@ Feedback MUST be actionable: state what went well, what was missing/incomplete, 
   try {
     const interaction = await withRetry(
       () =>
-        ai.interactions.create({
+        callGeminiInteraction({
           model: "gemini-3.8-flash",
           input: prompt,
           response_format: {
@@ -2873,7 +2916,6 @@ export const generateLiveIntro = async ({
     });
   }
 
-  const ai = getGeminiClient();
   const normExp = normalizeExperienceLevel(experience);
 
   const prompt = `You are a Principal Engineering Interviewer conducting a realistic, conversational 2026 software engineering interview.
@@ -2913,7 +2955,7 @@ Rules:
   try {
     const interaction = await withRetry(
       () =>
-        ai.interactions.create({
+        callGeminiInteraction({
           model: "gemini-3.8-flash",
           input: prompt,
           response_format: {
@@ -3003,7 +3045,6 @@ export const generateLiveConversationTurn = async ({
     });
   }
 
-  const ai = getGeminiClient();
   const normExp = normalizeExperienceLevel(experience);
 
   // Sanitize history to prevent duplicates or empty entries
@@ -3104,7 +3145,7 @@ INTERVIEWER STRATEGY & BEHAVIOR (2026 PRINCIPAL INTERVIEWER):
   try {
     const interaction = await withRetry(
       () =>
-        ai.interactions.create({
+        callGeminiInteraction({
           model: "gemini-3.8-flash",
           input: prompt,
           response_format: {
@@ -3208,7 +3249,6 @@ export const generateFinalLiveEvaluation = async ({
     });
   }
 
-  const ai = getGeminiClient();
   const normExp = normalizeExperienceLevel(experience);
 
   const fullTranscript = conversationHistory
@@ -3301,7 +3341,7 @@ REALISTIC EVALUATION & EARLY TERMINATION RULES (CRITICAL):
   try {
     const interaction = await withRetry(
       () =>
-        ai.interactions.create({
+        callGeminiInteraction({
           model: "gemini-3.8-flash",
           input: prompt,
           response_format: {
