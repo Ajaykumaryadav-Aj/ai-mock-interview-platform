@@ -79,46 +79,67 @@ const withRetry = async (fn, label) => {
   }
 };
 
+const isProduction =
+  (typeof import.meta !== "undefined" && import.meta.env?.PROD) ||
+  (typeof process !== "undefined" && process?.env?.NODE_ENV === "production");
+
 /**
  * Executes a Gemini request via the secure server-side proxy /api/gemini.
- * Falls back to client-side GoogleGenAI client if VITE_GEMINI_API_KEY is available (e.g. offline dev).
+ * In production, it strictly requires /api/gemini and NEVER falls back to the client SDK.
+ * In local development, it allows client SDK fallback only if /api/gemini returns 404 (standalone Vite dev).
  */
 const callGeminiInteraction = async ({ model = "gemini-3.8-flash", input, response_format }) => {
+  let proxyResponse;
+  let isProxyReachable = false;
+
   try {
-    const res = await fetch("/api/gemini", {
+    proxyResponse = await fetch("/api/gemini", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ model, input, response_format }),
     });
+    isProxyReachable = true;
+  } catch (networkErr) {
+    if (isProduction) {
+      throw new Error("Unable to connect to AI server. Please check your network connection and try again.");
+    }
+  }
 
-    if (res.ok) {
-      const data = await res.json();
+  if (isProxyReachable && proxyResponse) {
+    if (proxyResponse.ok) {
+      const data = await proxyResponse.json();
       return { output_text: data.output_text };
     }
 
-    if (res.status === 429) {
-      const errData = await res.json().catch(() => ({}));
-      const err = new Error(errData.error || "AI rate limit reached.");
+    const errData = await proxyResponse.json().catch(() => ({}));
+    const errorMessage = errData.error || `AI request failed with status ${proxyResponse.status}`;
+
+    if (proxyResponse.status === 429) {
+      const err = new Error(errorMessage);
       err.status = 429;
       throw err;
     }
 
-    if (res.status === 404) {
-      // Local Vite dev server without Vercel CLI — fallback to local client SDK
-    } else {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.error || `Gemini proxy error HTTP ${res.status}`);
+    // In production: NEVER fall back to client SDK — throw the proxy error immediately
+    if (isProduction) {
+      throw new Error(errorMessage);
     }
-  } catch (fetchErr) {
-    if (fetchErr?.status === 429) throw fetchErr;
-    if (!fetchErr.message?.includes("404") && !fetchErr.message?.includes("Failed to fetch")) {
-      console.warn("[Gemini] /api/gemini request error, trying local SDK fallback:", fetchErr.message);
+
+    // In local development: if 404 (Vite dev server without Vercel CLI), allow local client SDK fallback
+    if (proxyResponse.status !== 404) {
+      throw new Error(errorMessage);
     }
   }
 
-  // Client-side fallback if VITE_GEMINI_API_KEY is available in dev
+  // Guard: In production, client SDK fallback is strictly forbidden
+  if (isProduction) {
+    throw new Error("Gemini AI proxy is unavailable in production.");
+  }
+
+  // Client-side fallback ONLY in local development
+  console.info("[Gemini] /api/gemini unavailable locally, attempting client-side fallback with VITE_GEMINI_API_KEY.");
   const client = getGeminiClient();
   return await client.interactions.create({
     model,

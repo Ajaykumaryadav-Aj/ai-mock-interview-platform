@@ -18,27 +18,7 @@ function getGeminiClient() {
   return geminiClient;
 }
 
-function handleCors(req, res) {
-  const requestOrigin = req.headers.origin;
-  if (!requestOrigin) return true;
-
-  const appOrigin = process.env.APP_ORIGIN ? process.env.APP_ORIGIN.replace(/\/$/, "") : "";
-  const isLocalDev =
-    process.env.NODE_ENV !== "production" &&
-    (requestOrigin.startsWith("http://localhost:") || requestOrigin.startsWith("http://127.0.0.1:"));
-
-  const isAllowed = isLocalDev || (appOrigin && requestOrigin === appOrigin);
-
-  if (isAllowed) {
-    res.setHeader("Access-Control-Allow-Origin", requestOrigin);
-    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
-    res.setHeader("Vary", "Origin");
-    return true;
-  }
-
-  return false;
-}
+import { handleCors } from "./_cors.js";
 
 export default async function handler(req, res) {
   // CORS Preflight

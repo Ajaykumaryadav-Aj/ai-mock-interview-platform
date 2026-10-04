@@ -35,39 +35,7 @@ function getFirebaseAdmin() {
   });
 }
 
-/**
- * Applies restricted CORS headers based on configured production APP_ORIGIN.
- * Rejects untrusted origins without using wildcard '*'.
- *
- * @param {import('http').IncomingMessage} req
- * @param {import('http').ServerResponse} res
- * @returns {boolean} Whether the request origin is allowed
- */
-function handleCors(req, res) {
-  const requestOrigin = req.headers.origin;
-  if (!requestOrigin) {
-    // Non-browser or same-origin request
-    return true;
-  }
-
-  const appOrigin = process.env.APP_ORIGIN ? process.env.APP_ORIGIN.replace(/\/$/, "") : "";
-
-  const isLocalDev =
-    process.env.NODE_ENV !== "production" &&
-    (requestOrigin.startsWith("http://localhost:") || requestOrigin.startsWith("http://127.0.0.1:"));
-
-  const isAllowed = isLocalDev || (appOrigin && requestOrigin === appOrigin);
-
-  if (isAllowed) {
-    res.setHeader("Access-Control-Allow-Origin", requestOrigin);
-    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
-    res.setHeader("Vary", "Origin");
-    return true;
-  }
-
-  return false;
-}
+import { handleCors } from "./_cors.js";
 
 /**
  * Serverless Function Handler
