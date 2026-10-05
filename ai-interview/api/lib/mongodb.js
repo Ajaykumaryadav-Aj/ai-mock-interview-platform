@@ -24,31 +24,47 @@ let cachedPromise = null;
  */
 export async function getMongoClient() {
   if (cachedPromise) {
-    return cachedPromise;
+    try {
+      return await cachedPromise;
+    } catch {
+      // Clear failed promise so subsequent requests can retry
+      cachedClient = null;
+      cachedPromise = null;
+      if (globalThis.__mongoClientPromise) {
+        delete globalThis.__mongoClientPromise;
+      }
+    }
   }
 
   const uri = getMongoUri();
   const options = {
+    tls: true,
     maxPoolSize: 10,
     minPoolSize: 1,
     maxIdleTimeMS: 30000,
-    connectTimeoutMS: 10000,
-    serverSelectionTimeoutMS: 10000,
+    connectTimeoutMS: 8000,
+    serverSelectionTimeoutMS: 8000,
   };
 
-  // In development, preserve client across Vite / Node reloads
-  if (process.env.NODE_ENV !== "production") {
-    if (!globalThis.__mongoClientPromise) {
-      cachedClient = new MongoClient(uri, options);
-      globalThis.__mongoClientPromise = cachedClient.connect();
+  const client = new MongoClient(uri, options);
+  cachedClient = client;
+
+  const connectPromise = client.connect().catch((err) => {
+    // Clear failed promise on error
+    cachedClient = null;
+    cachedPromise = null;
+    if (globalThis.__mongoClientPromise) {
+      delete globalThis.__mongoClientPromise;
     }
-    cachedPromise = globalThis.__mongoClientPromise;
-  } else {
-    cachedClient = new MongoClient(uri, options);
-    cachedPromise = cachedClient.connect();
+    throw err;
+  });
+
+  cachedPromise = connectPromise;
+  if (process.env.NODE_ENV !== "production") {
+    globalThis.__mongoClientPromise = connectPromise;
   }
 
-  return cachedPromise;
+  return connectPromise;
 }
 
 // In-memory test store for automated testing when NODE_ENV === "test"
@@ -159,10 +175,21 @@ export async function getDb(dbName) {
     return memoryDb;
   }
 
-  const client = await getMongoClient();
-  const db = dbName ? client.db(dbName) : client.db();
-  await ensureIndexes(db);
-  return db;
+  try {
+    const client = await getMongoClient();
+    const db = dbName ? client.db(dbName) : client.db();
+    await ensureIndexes(db);
+    return db;
+  } catch (error) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(
+        `[MongoDB Atlas Notice] Atlas connection failed in dev (${error.message}). ` +
+        `Using resilient fallback store so your app works seamlessly.`
+      );
+      return memoryDb;
+    }
+    throw error;
+  }
 }
 
 let indexesEnsured = false;
