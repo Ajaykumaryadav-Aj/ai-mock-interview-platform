@@ -9,32 +9,15 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { subscribeToInterviews } from "@/services/interviewService";
-import { auth } from "@/services/firebase";
-import { onAuthStateChanged } from "firebase/auth";
 
 export const Dashboard = () => {
   const [interviews, setInterviews] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [firebaseUser, setFirebaseUser] = useState(auth.currentUser);
   const { userId } = useAuth();
-
-  // Listen for Firebase Auth user state
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setFirebaseUser(user);
-    });
-    return () => unsubscribe();
-  }, []);
 
   useEffect(() => {
     if (!userId) {
       setLoading(false);
-      return;
-    }
-
-    // Wait until Firebase Auth is established and matches Clerk userId
-    if (!firebaseUser || firebaseUser.uid !== userId) {
-      setLoading(true);
       return;
     }
 
@@ -59,7 +42,7 @@ export const Dashboard = () => {
         unsubscribe();
       }
     };
-  }, [userId, firebaseUser]);
+  }, [userId]);
 
   const handleDeleteInterview = (deletedId) => {
     setInterviews((prev) => prev.filter((item) => item.id !== deletedId));

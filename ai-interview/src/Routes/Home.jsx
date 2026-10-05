@@ -79,10 +79,10 @@ export const HomePage = () => {
       {/* Marquee Section with leading slashes */}
       <div className="w-full my-12">
         <Marquee pauseOnHover className="bg-white/60 py-3 rounded-lg shadow">
-          <MarqueImg img="/assets/img/logo/firebase.png" />
+          <MarqueImg img="/assets/img/logo/react.png" />
           <MarqueImg img="/assets/img/logo/meet.png" />
           <MarqueImg img="/assets/img/logo/zoom.png" />
-          <MarqueImg img="/assets/img/logo/firebase.png" />
+          <MarqueImg img="/assets/img/logo/react.png" />
           <MarqueImg img="/assets/img/logo/microsoft.png" />
           <MarqueImg img="/assets/img/logo/meet.png" />
           <MarqueImg img="/assets/img/logo/tailwindcss.png" />

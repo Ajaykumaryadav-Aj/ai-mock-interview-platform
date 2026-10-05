@@ -8,14 +8,12 @@ import { InterviewPin } from "@/components/InterviewPin";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import WebCam from "react-webcam";
 import { getInterviewById } from "@/services/interviewService";
-import { useFirebaseAuthReady } from "@/services/firebaseAuthBridge";
 
 export const MockLoadPage = () => {
   const { interviewId } = useParams();
   const [interview, setInterview] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isWebCamEnabled, setIsWebCamEnabled] = useState(false);
-  const { isFirebaseReady } = useFirebaseAuthReady();
 
   useEffect(() => {
     let isMounted = true;
@@ -23,10 +21,6 @@ export const MockLoadPage = () => {
     const fetchInterview = async () => {
       if (!interviewId) {
         if (isMounted) setIsLoading(false);
-        return;
-      }
-
-      if (!isFirebaseReady) {
         return;
       }
 
@@ -50,9 +44,9 @@ export const MockLoadPage = () => {
     return () => {
       isMounted = false;
     };
-  }, [interviewId, isFirebaseReady]);
+  }, [interviewId]);
 
-  if (isLoading || !isFirebaseReady) {
+  if (isLoading) {
     return <LoaderPage className="w-full h-[70vh]" />;
   }
 

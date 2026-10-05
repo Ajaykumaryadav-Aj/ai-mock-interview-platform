@@ -35,7 +35,6 @@ import {
   getInterviewById,
   getUserAnswersForInterview,
 } from "@/services/interviewService";
-import { useFirebaseAuthReady } from "@/services/firebaseAuthBridge";
 
 export const FeedBack = () => {
   const { interviewId } = useParams();
@@ -44,7 +43,6 @@ export const FeedBack = () => {
   const [feedbacks, setFeedbacks] = useState([]);
   const [activeFeed, setActiveFeed] = useState("");
   const { userId } = useAuth();
-  const { isFirebaseReady } = useFirebaseAuthReady();
 
   useEffect(() => {
     let isMounted = true;
@@ -52,10 +50,6 @@ export const FeedBack = () => {
     const loadData = async () => {
       if (!interviewId) {
         if (isMounted) setIsLoading(false);
-        return;
-      }
-
-      if (!isFirebaseReady) {
         return;
       }
 
@@ -89,7 +83,7 @@ export const FeedBack = () => {
     return () => {
       isMounted = false;
     };
-  }, [interviewId, userId, isFirebaseReady]);
+  }, [interviewId, userId]);
 
   const isLive = interview?.mode === "live";
   const liveEval = interview?.finalEvaluation;

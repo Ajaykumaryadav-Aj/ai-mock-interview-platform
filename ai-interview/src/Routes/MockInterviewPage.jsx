@@ -7,13 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Lightbulb, CheckCircle2 } from "lucide-react";
 import { QuestionSection } from "@/components/QuestionSection";
 import { getInterviewById } from "@/services/interviewService";
-import { useFirebaseAuthReady } from "@/services/firebaseAuthBridge";
 
 export const MockInterviewPage = () => {
   const { interviewId } = useParams();
   const [interview, setInterview] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { isFirebaseReady } = useFirebaseAuthReady();
 
   useEffect(() => {
     let isMounted = true;
@@ -21,10 +19,6 @@ export const MockInterviewPage = () => {
     const fetchInterview = async () => {
       if (!interviewId) {
         if (isMounted) setIsLoading(false);
-        return;
-      }
-
-      if (!isFirebaseReady) {
         return;
       }
 
@@ -48,9 +42,9 @@ export const MockInterviewPage = () => {
     return () => {
       isMounted = false;
     };
-  }, [interviewId, isFirebaseReady]);
+  }, [interviewId]);
 
-  if (isLoading || !isFirebaseReady) {
+  if (isLoading) {
     return <LoaderPage className="w-full h-[70vh]" />;
   }
 

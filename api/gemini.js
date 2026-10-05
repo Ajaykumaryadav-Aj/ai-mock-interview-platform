@@ -1,1 +1,1 @@
-export { default } from "./ai-interview/api/gemini.js";
+export { default } from "../ai-interview/api/gemini.js";

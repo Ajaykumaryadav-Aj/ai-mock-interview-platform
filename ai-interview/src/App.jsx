@@ -21,7 +21,7 @@ import { AuthHandler } from "@/handlers/auth-handler";
 const App = () => {
   return (
     <Router>
-      {/* Synchronizes Clerk user profile with Firestore across all routes */}
+      {/* Synchronizes Clerk user profile with MongoDB Atlas across all routes */}
       <AuthHandler />
 
       <Routes>

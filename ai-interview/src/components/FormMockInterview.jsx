@@ -4,7 +4,6 @@ import { FormProvider, useForm } from "react-hook-form";
 import { CustomBreadCrum } from "./CustomBreadCrum";
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@clerk/clerk-react";
-import { auth } from "@/services/firebase";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Headings } from "./Headings";
@@ -231,32 +230,13 @@ export const FormMockInterview = ({ initialData }) => {
     try {
       setLoading(true);
 
-      // ── Ensure Firebase Auth is established before Firestore write ───────
-      let fbUid = auth.currentUser?.uid;
-      if (!fbUid) {
-        for (let i = 0; i < 10; i++) {
-          await new Promise((res) => setTimeout(res, 200));
-          if (auth.currentUser?.uid) {
-            fbUid = auth.currentUser.uid;
-            break;
-          }
-        }
-      }
-      console.log(
-        "[FormMockInterview] Submit — Clerk userId:",
-        userId ? userId.slice(0, 8) + "…" : "null",
-        "| Firebase uid:",
-        fbUid ? fbUid.slice(0, 8) + "…" : "null (Firebase Auth NOT established)"
-      );
-      if (!fbUid) {
-        toast.error("Authentication initializing", {
-          description:
-            "Connecting security session, please click Create again in a moment.",
+      if (!userId) {
+        toast.error("Authentication Required", {
+          description: "Please sign in to create or update interviews.",
         });
         setLoading(false);
         return;
       }
-      // ─────────────────────────────────────────────────────────────────────
 
       if (interviewSource === "resume" && !resumeData) {
         toast.error("Resume Required", {

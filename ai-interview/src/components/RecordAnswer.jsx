@@ -18,7 +18,6 @@ import { toast } from "sonner";
 import { SaveModel } from "./SaveModel";
 import { evaluateAnswer } from "@/services/gemini";
 import { saveUserAnswer } from "@/services/interviewService";
-import { auth } from "@/services/firebase";
 
 export const RecordAnswer = ({
   question,
@@ -94,7 +93,7 @@ export const RecordAnswer = ({
     startSpeechToText();
   };
 
-  // Save the answer and AI feedback into Firestore
+  // Save the answer and AI feedback into MongoDB Atlas
   const handleSaveUserAnswer = async () => {
     if (!aiResult) {
       toast.error("No evaluation to save", {
@@ -103,9 +102,9 @@ export const RecordAnswer = ({
       return;
     }
 
-    if (!auth.currentUser) {
-      toast.error("Authentication initializing", {
-        description: "Please wait a moment and try saving again.",
+    if (!userId) {
+      toast.error("Authentication required", {
+        description: "Please sign in to save your answer.",
       });
       return;
     }

@@ -1,4 +1,5 @@
 {
+  "installCommand": "npm --prefix ai-interview install",
   "buildCommand": "npm --prefix ai-interview run build",
   "outputDirectory": "ai-interview/dist",
   "rewrites": [

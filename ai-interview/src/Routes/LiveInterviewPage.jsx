@@ -47,8 +47,6 @@ import {
   generateLiveConversationTurn,
   generateFinalLiveEvaluation,
 } from "@/services/gemini";
-import { useFirebaseAuthReady } from "@/services/firebaseAuthBridge";
-import { auth } from "@/services/firebase";
 
 /**
  * Sanitizes conversation history by removing empty or redundant consecutive entries.
@@ -113,7 +111,6 @@ export const LiveInterviewPage = () => {
   const { interviewId } = useParams();
   const navigate = useNavigate();
   const { userId } = useAuth();
-  const { isFirebaseReady } = useFirebaseAuthReady();
 
   // ── Core Interview State ──────────────────────────────────────────────────
   const [interview, setInterview] = useState(null);
@@ -177,7 +174,7 @@ export const LiveInterviewPage = () => {
     let isMounted = true;
 
     const loadInterview = async () => {
-      if (!interviewId || !isFirebaseReady) return;
+      if (!interviewId) return;
 
       try {
         setLoading(true);
@@ -230,7 +227,7 @@ export const LiveInterviewPage = () => {
     return () => {
       isMounted = false;
     };
-  }, [interviewId, isFirebaseReady, navigate]);
+  }, [interviewId, navigate]);
 
   // ── 2. Speech Synthesis (AI Voice Output) ──────────────────────────────────
   const speakMessage = (text, onFinished) => {
@@ -605,7 +602,7 @@ export const LiveInterviewPage = () => {
     setInterimText("");
 
     try {
-      // Save sanitized user answer to Firestore
+      // Save sanitized user answer to MongoDB Atlas
       await updateInterview(interviewId, {
         conversationHistory: updatedHistory,
       });
@@ -640,7 +637,7 @@ export const LiveInterviewPage = () => {
       setCurrentAiQuestion(turnResult.message);
       setCurrentTopic(turnResult.topic || "Technical Assessment");
 
-      // Persist to Firestore
+      // Persist to MongoDB Atlas
       await updateInterview(interviewId, {
         conversationHistory: nextHistory,
       });
