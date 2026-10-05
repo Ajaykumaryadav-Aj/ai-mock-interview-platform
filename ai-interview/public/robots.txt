@@ -1,0 +1,39 @@
+# robots.txt for MocInterview (https://mocinterview.vercel.app)
+# Allow legitimate search engines to crawl public SEO pages while protecting private routes
+
+User-agent: *
+Allow: /
+Allow: /assets/
+Allow: /about
+Allow: /services
+Allow: /contact
+Allow: /ai-mock-interview
+Allow: /mock-interview
+Allow: /ai-interview-practice
+Allow: /interview-preparation
+Allow: /technical-interview
+Allow: /hr-interview
+Allow: /behavioral-interview
+Allow: /software-developer-interview
+Allow: /frontend-interview
+Allow: /react-interview
+Allow: /javascript-interview
+Allow: /flutter-interview
+Allow: /fresher-interview
+Allow: /resume-interview
+Allow: /blog
+Allow: /blog/*
+
+# Disallow authenticated application dashboards, interview sessions, and internal APIs
+Disallow: /generate
+Disallow: /generate/*
+Disallow: /dashboard
+Disallow: /signin
+Disallow: /signin/*
+Disallow: /signup
+Disallow: /signup/*
+Disallow: /api/
+Disallow: /api/*
+
+# XML Sitemap reference
+Sitemap: https://mocinterview.vercel.app/sitemap.xml

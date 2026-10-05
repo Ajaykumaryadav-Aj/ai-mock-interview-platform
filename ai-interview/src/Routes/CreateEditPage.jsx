@@ -2,6 +2,8 @@ import { FormMockInterview } from "@/components/FormMockInterview";
 import { getInterviewById } from "@/services/interviewService";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { SEO } from "@/components/SEO";
+
 export const CreateEditPage = () => {
   const { interviewId } = useParams();
   const [interview, setInterview] = useState(null);
@@ -35,7 +37,14 @@ export const CreateEditPage = () => {
 
   return (
     <div className="my-4 flex-col w-full">
+      <SEO
+        title={interviewId === "create" ? "Create Mock Interview | MocInterview" : "Edit Mock Interview | MocInterview"}
+        noindex={true}
+        nofollow={true}
+      />
       <FormMockInterview initialData={interview} isLoadingDoc={isLoading} />
     </div>
   );
 };
+
+export default CreateEditPage;

@@ -1,6 +1,7 @@
 import { useAuth } from "@clerk/clerk-react";
 import LoaderPage from "@/Routes/Loaderpage";
 import { Navigate } from "react-router-dom";
+import { SEO } from "@/components/SEO";
 
 const ProtectedRoutes = ({ children }) => {
   const { isLoaded, isSignedIn } = useAuth();
@@ -13,7 +14,12 @@ const ProtectedRoutes = ({ children }) => {
     return <Navigate to="/signin" replace />;
   }
 
-  return children;
+  return (
+    <>
+      <SEO noindex={true} nofollow={true} title="Dashboard" />
+      {children}
+    </>
+  );
 };
 
 export default ProtectedRoutes;

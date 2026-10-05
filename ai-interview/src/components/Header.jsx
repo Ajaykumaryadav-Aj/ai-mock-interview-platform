@@ -1,44 +1,26 @@
-import { cn } from "@/lib/utils";
-import { useAuth } from "@clerk/clerk-react";
 import Containers from "./Containers";
 import LogoContainer from "@/components/LogoContainer";
 import NavigationRoutes from "@/components/NavigationRoutes";
-import { NavLink } from "react-router-dom";
 import { ProfileContainer } from "./ProfileContainer";
 import { ToggleContainer } from "./ToggleContainer";
 
 const Header = () => {
-  const { userId } = useAuth();
-
   return (
-    <header className={cn("w-full border-b duration-150 transition-all ease-in-out")}>
-      <Containers>
-        <div className="flex items-center gap-4 w-full">
-          {/* Logo section */}
-          <LogoContainer />
+    <header className="sticky top-0 z-50 w-full border-b border-gray-100/80 bg-white/85 backdrop-blur-md transition-all">
+      <Containers className="py-2.5 sm:py-3">
+        <div className="flex items-center justify-between gap-4 w-full">
+          {/* Left: Brand Logo */}
+          <div className="flex items-center gap-8">
+            <LogoContainer />
 
-          {/* Navigation section */}
-          <nav className="hidden md:flex items-center gap-3">
-            <NavigationRoutes isMobile={false} />
+            {/* Center/Left: Navigation links & dropdowns */}
+            <nav className="hidden lg:flex items-center">
+              <NavigationRoutes isMobile={false} />
+            </nav>
+          </div>
 
-            {/* If the user is authenticated then render out the takeInterview nav */}
-            {userId && (
-              <NavLink
-                to="/generate"
-                className={({ isActive }) =>
-                  cn(
-                    "text-base text-neutral-600",
-                    isActive && "text-neutral-900 font-semibold"
-                  )
-                }
-              >
-                Take An Interview
-              </NavLink>
-            )}
-          </nav>
-
-          {/* Profile & Mobile Toggle */}
-          <div className="ml-auto flex items-center gap-6">
+          {/* Right: Auth buttons & Mobile trigger */}
+          <div className="flex items-center gap-3">
             <ProfileContainer />
             <ToggleContainer />
           </div>

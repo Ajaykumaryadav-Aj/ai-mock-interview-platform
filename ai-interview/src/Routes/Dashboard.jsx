@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { subscribeToInterviews } from "@/services/interviewService";
+import { SEO } from "@/components/SEO";
 
 export const Dashboard = () => {
   const [interviews, setInterviews] = useState([]);
@@ -50,6 +51,7 @@ export const Dashboard = () => {
 
   return (
     <>
+      <SEO title="Candidate Dashboard | MocInterview" noindex={true} nofollow={true} />
       <div className="flex w-full items-center justify-between">
         <div className="flex w-full items-center justify-between">
           <Headings

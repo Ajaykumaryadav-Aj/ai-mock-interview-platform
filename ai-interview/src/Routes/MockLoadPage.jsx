@@ -8,6 +8,7 @@ import { InterviewPin } from "@/components/InterviewPin";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import WebCam from "react-webcam";
 import { getInterviewById } from "@/services/interviewService";
+import { SEO } from "@/components/SEO";
 
 export const MockLoadPage = () => {
   const { interviewId } = useParams();
@@ -56,6 +57,11 @@ export const MockLoadPage = () => {
 
   return (
     <div className="flex flex-col w-full gap-8 py-5">
+      <SEO
+        title="Prepare Interview Session | MocInterview"
+        noindex={true}
+        nofollow={true}
+      />
       <div className="flex items-center justify-between w-full gap-2">
         <CustomBreadCrum
           breadCrumbPage={interview?.position || ""}
@@ -114,3 +120,5 @@ export const MockLoadPage = () => {
     </div>
   );
 };
+
+export default MockLoadPage;

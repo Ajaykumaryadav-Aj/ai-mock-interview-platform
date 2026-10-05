@@ -35,6 +35,7 @@ import {
   getInterviewById,
   getUserAnswersForInterview,
 } from "@/services/interviewService";
+import { SEO } from "@/components/SEO";
 
 export const FeedBack = () => {
   const { interviewId } = useParams();
@@ -297,6 +298,11 @@ export const FeedBack = () => {
 
   return (
     <div className="flex flex-col w-full gap-8 py-5">
+      <SEO
+        title="Interview Feedback & Performance Report | MocInterview"
+        noindex={true}
+        nofollow={true}
+      />
       {/* Breadcrumb navigation */}
       <div className="flex items-center justify-between w-full gap-2">
         <CustomBreadCrum
@@ -1160,4 +1166,6 @@ export const FeedBack = () => {
     </div>
   );
 };
+
+export default FeedBack;
 

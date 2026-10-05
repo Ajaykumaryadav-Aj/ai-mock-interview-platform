@@ -1,25 +1,26 @@
 import Containers from "@/components/Containers";
+import { SEO } from "@/components/SEO";
 import { Users, Award, HeartHandshake, Lightbulb } from "lucide-react";
 
 const teamMembers = [
   {
-    name: "Akash Rajak",
+    name: "Ajay Kumar",
     role: "Founder & Lead Developer",
     img: "/assets/img/RohanFRajak.jpeg",
     bio: "Passionate about AI and empowering job seekers with smart interview tools.",
   },
-  {
-    name: "Priya Sharma",
-    role: "Product Designer",
-    img: "/assets/img/PriyaSharma.jpeg",
-    bio: "Designs intuitive, beautiful interfaces for seamless user experiences.",
-  },
-  {
-    name: "Rahul Verma",
-    role: "AI Engineer",
-    img: "/assets/img/Rahul.jpeg",
-    bio: "Builds intelligent feedback systems to help users grow and succeed.",
-  },
+  // {
+  //   name: "Priya Sharma",
+  //   role: "Product Designer",
+  //   img: "/assets/img/PriyaSharma.jpeg",
+  //   bio: "Designs intuitive, beautiful interfaces for seamless user experiences.",
+  // },
+  // {
+  //   name: "Rahul Verma",
+  //   role: "AI Engineer",
+  //   img: "/assets/img/Rahul.jpeg",
+  //   bio: "Builds intelligent feedback systems to help users grow and succeed.",
+  // },
 ];
 
 const values = [
@@ -43,6 +44,15 @@ const values = [
 export const AboutPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-emerald-50 to-gray-100 py-16">
+      <SEO
+        title="About Us | AI-Powered Mock Interview Platform | MocInterview"
+        description="Learn about MocInterview's mission to empower software developers and freshers with AI-driven interview preparation, real-time feedback, and career growth."
+        canonical="/about"
+        breadcrumbs={[
+          { name: "Home", item: "/" },
+          { name: "About Us", item: "/about" },
+        ]}
+      />
       <Containers>
         {/* Hero Section */}
         <section className="flex flex-col md:flex-row items-center gap-12 mb-16">

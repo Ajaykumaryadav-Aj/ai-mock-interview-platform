@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Lightbulb, CheckCircle2 } from "lucide-react";
 import { QuestionSection } from "@/components/QuestionSection";
 import { getInterviewById } from "@/services/interviewService";
+import { SEO } from "@/components/SEO";
 
 export const MockInterviewPage = () => {
   const { interviewId } = useParams();
@@ -60,6 +61,11 @@ export const MockInterviewPage = () => {
 
   return (
     <div className="flex flex-col w-full gap-8 py-5">
+      <SEO
+        title="Live Practice Session | MocInterview"
+        noindex={true}
+        nofollow={true}
+      />
       <CustomBreadCrum
         breadCrumbPage="Start"
         breadCrumbItems={[
@@ -109,3 +115,5 @@ export const MockInterviewPage = () => {
     </div>
   );
 };
+
+export default MockInterviewPage;

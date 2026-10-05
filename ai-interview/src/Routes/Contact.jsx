@@ -1,14 +1,8 @@
 import Containers from "@/components/Containers";
 import { Button } from "@/components/ui/button";
-import { Facebook, Instagram, Linkedin, Twitter, Mail, Phone, MapPin } from "lucide-react";
+import { SEO } from "@/components/SEO";
+import { Mail, MessageSquare } from "lucide-react";
 import { useState } from "react";
-
-const socials = [
-  { href: "https://facebook.com", icon: <Facebook className="text-blue-500" /> },
-  { href: "https://twitter.com", icon: <Twitter className="text-blue-400" /> },
-  { href: "https://instagram.com", icon: <Instagram className="text-pink-500" /> },
-  { href: "https://linkedin.com", icon: <Linkedin className="text-blue-700" /> },
-];
 
 export const ContactPage = () => {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
@@ -25,34 +19,32 @@ export const ContactPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-emerald-50 to-gray-100 py-16">
+      <SEO
+        title="Contact Us | MocInterview Support & Inquiries"
+        description="Have questions or feedback about MocInterview? Reach out to our team for platform support, partnership inquiries, or feature suggestions."
+        canonical="/contact"
+        breadcrumbs={[
+          { name: "Home", item: "/" },
+          { name: "Contact Us", item: "/contact" },
+        ]}
+      />
       <Containers>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           {/* Contact Info */}
           <div className="space-y-8">
             <h1 className="text-4xl md:text-5xl font-extrabold text-emerald-700 mb-4">Contact Us</h1>
             <p className="text-lg text-muted-foreground">
-              We'd love to hear from you! Reach out for support, feedback, or partnership opportunities.
+              We'd love to hear from you! Reach out for support, feedback, feature requests, or partnership opportunities.
             </p>
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <Mail className="text-emerald-500" />
-                <span>support@ai-mock-interview.com</span>
+                <Mail className="text-emerald-500 w-5 h-5" />
+                <span className="text-gray-700 font-medium">support@mocinterview.com</span>
               </div>
               <div className="flex items-center gap-3">
-                <Phone className="text-emerald-500" />
-                <span>+1 (555) 123-4567</span>
+                <MessageSquare className="text-emerald-500 w-5 h-5" />
+                <span className="text-gray-700 font-medium">Community feedback & questions welcome 24/7</span>
               </div>
-              <div className="flex items-center gap-3">
-                <MapPin className="text-emerald-500" />
-                <span>123 AI Street, Tech City, 12345</span>
-              </div>
-            </div>
-            <div className="flex gap-4 mt-6">
-              {socials.map((s, i) => (
-                <a key={i} href={s.href} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
-                  {s.icon}
-                </a>
-              ))}
             </div>
           </div>
 

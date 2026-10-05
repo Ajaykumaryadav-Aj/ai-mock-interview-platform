@@ -47,6 +47,7 @@ import {
   generateLiveConversationTurn,
   generateFinalLiveEvaluation,
 } from "@/services/gemini";
+import { SEO } from "@/components/SEO";
 
 /**
  * Sanitizes conversation history by removing empty or redundant consecutive entries.
@@ -796,6 +797,11 @@ export const LiveInterviewPage = () => {
 
   return (
     <div className="flex flex-col w-full gap-5 py-4 min-h-[90vh]">
+      <SEO
+        title="Live AI Interview Room | MocInterview"
+        noindex={true}
+        nofollow={true}
+      />
       {/* ── Top Bar / Header ─────────────────────────────────────────────── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-2 border-b">
         <div>
