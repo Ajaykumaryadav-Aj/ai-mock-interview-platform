@@ -17,6 +17,9 @@ const MockLoadPage = lazy(() => import("@/Routes/MockLoadPage"));
 const MockInterviewPage = lazy(() => import("@/Routes/MockInterviewPage"));
 const LiveInterviewPage = lazy(() => import("@/Routes/LiveInterviewPage"));
 const FeedBack = lazy(() => import("@/Routes/FeedBack"));
+const CodingIndexPage = lazy(() => import("@/Routes/CodingIndexPage"));
+const CodingRoundPage = lazy(() => import("@/Routes/CodingRoundPage"));
+const AtsResumePage = lazy(() => import("@/Routes/AtsResumePage"));
 
 // Lazy-loaded public routes and resources
 const ContactPage = lazy(() => import("@/Routes/Contact"));
@@ -63,6 +66,13 @@ const App = () => {
             <Route path="/fresher-interview" element={<LandingPageRoute targetSlug="fresher-interview" />} />
             <Route path="/resume-interview" element={<LandingPageRoute targetSlug="resume-interview" />} />
 
+            {/* ATS Resume Checker - Public SEO & High-Intent Routes */}
+            <Route path="/ats-resume" element={<AtsResumePage />} />
+            <Route path="/ats" element={<Navigate to="/ats-resume" replace />} />
+            <Route path="/resume-score" element={<Navigate to="/ats-resume" replace />} />
+            <Route path="/ats-checker" element={<Navigate to="/ats-resume" replace />} />
+            <Route path="/resume-analyzer" element={<Navigate to="/ats-resume" replace />} />
+
             {/* Blog & Interview Guides */}
             <Route path="/blog" element={<BlogIndexRoute />} />
             <Route path="/blog/:slug" element={<BlogPostRoute />} />
@@ -99,6 +109,10 @@ const App = () => {
               />
               <Route path="feedback/:interviewId" element={<FeedBack />} />
             </Route>
+
+            {/* Dedicated Coding Round Protected Routes */}
+            <Route path="/coding" element={<CodingIndexPage />} />
+            <Route path="/coding/:questionId" element={<CodingRoundPage />} />
           </Route>
 
           {/* Dashboard alias redirect */}

@@ -5,7 +5,7 @@
  * Zero external native binary dependencies; uses standard Web APIs and robust stream parsing.
  */
 
-import { analyzeResume as aiAnalyzeResume } from "./gemini";
+import { analyzeResume as aiAnalyzeResume } from "./gemini.js";
 
 // Maximum supported resume file size: 5MB
 export const MAX_RESUME_FILE_SIZE = 5 * 1024 * 1024;
@@ -368,20 +368,24 @@ const parsePdfContentOperators = (content) => {
   const arrayTjRegex = /\[(.*?)\]\s*TJ/gs;
   while ((match = arrayTjRegex.exec(content)) !== null) {
     const arrayContent = match[1];
-    const itemRegex = /(?:\(([^)]*)\)|<([0-9a-fA-F]+)>)/g;
-    let itemMatch;
-    const words = [];
-    while ((itemMatch = itemRegex.exec(arrayContent)) !== null) {
-      if (itemMatch[1] !== undefined) {
-        const decoded = decodePdfString(itemMatch[1]);
-        if (decoded) words.push(decoded);
-      } else if (itemMatch[2] !== undefined) {
-        const decoded = decodeHexPdfString(itemMatch[2]);
-        if (decoded) words.push(decoded);
+    const tokenRegex = /(?:\(([^)]*)\)|<([0-9a-fA-F]+)>|(-?\d+(?:\.\d+)?))/g;
+    let tokenMatch;
+    let lineStr = "";
+    while ((tokenMatch = tokenRegex.exec(arrayContent)) !== null) {
+      if (tokenMatch[1] !== undefined) {
+        lineStr += decodePdfString(tokenMatch[1]);
+      } else if (tokenMatch[2] !== undefined) {
+        lineStr += decodeHexPdfString(tokenMatch[2]);
+      } else if (tokenMatch[3] !== undefined) {
+        const num = parseFloat(tokenMatch[3]);
+        // Negative displacement in PDF TJ indicates space between words (typically <= -80)
+        if (num <= -80 && lineStr && !lineStr.endsWith(" ")) {
+          lineStr += " ";
+        }
       }
     }
-    if (words.length > 0) {
-      result.push(words.join(""));
+    if (lineStr.trim()) {
+      result.push(lineStr.trim());
     }
   }
 
@@ -401,8 +405,7 @@ const decodePdfString = (str) => {
     .replace(/\\n/g, "\n")
     .replace(/\\t/g, "\t")
     .replace(/\\([()\\])/g, "$1")
-    .replace(/\r?\n/g, " ")
-    .trim();
+    .replace(/\r?\n/g, " ");
 };
 
 /**
@@ -486,10 +489,52 @@ export const processResume = async (file) => {
   };
 };
 
+/**
+ * Extracts plain text from an uploaded resume file without invoking interview question analysis.
+ * Ideal for ATS scanning.
+ *
+ * @param {File} file
+ * @returns {Promise<{text: string, fileName: string, fileSize: number}>}
+ */
+export const extractResumeFileText = async (file) => {
+  validateResumeFile(file);
+  const name = (file.name || "resume.pdf").toLowerCase();
+  let extractedRaw = "";
+
+  try {
+    if (name.endsWith(".docx")) {
+      const buffer = await file.arrayBuffer();
+      extractedRaw = await extractTextFromDocx(buffer);
+    } else if (name.endsWith(".pdf")) {
+      const buffer = await file.arrayBuffer();
+      extractedRaw = await extractTextFromPdf(buffer);
+    } else {
+      extractedRaw = await file.text();
+    }
+  } catch (err) {
+    console.error("[resumeService] Extraction error:", err);
+    throw new Error("Unable to read this file. Please upload a valid PDF, DOCX, or TXT resume.");
+  }
+
+  const normalized = normalizeResumeText(extractedRaw);
+  if (!normalized || normalized.length < 30) {
+    throw new Error(
+      "Unable to extract text from this resume. Please ensure it is a selectable text file (scanned image PDFs without text layer cannot be parsed)."
+    );
+  }
+
+  return {
+    text: normalized,
+    fileName: file.name,
+    fileSize: file.size,
+  };
+};
+
 export default {
   validateResumeFile,
   extractTextFromDocx,
   extractTextFromPdf,
   normalizeResumeText,
   processResume,
+  extractResumeFileText,
 };

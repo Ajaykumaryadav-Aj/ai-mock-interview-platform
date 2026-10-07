@@ -30,11 +30,18 @@ export const PRIMARY_KEYWORDS = [
   "mock interview for freshers",
   "interview practice for software developers",
   "resume based mock interview",
+  "ATS resume checker",
+  "free ATS resume score",
+  "ATS resume scanner",
+  "check resume ATS score online",
+  "resume score calculator",
+  "ATS compatibility check",
 ];
 
 export const NAVIGATION_LINKS = [
   { label: "Home", href: "/" },
   { label: "AI Mock Interview", href: "/ai-mock-interview" },
+  { label: "ATS Resume Checker", href: "/ats-resume" },
   { label: "Technical Interview", href: "/technical-interview" },
   { label: "HR Interview", href: "/hr-interview" },
   { label: "Blog & Guides", href: "/blog" },
@@ -45,6 +52,7 @@ export const NAVIGATION_LINKS = [
 export const FOOTER_LINKS = {
   platform: [
     { label: "Home", href: "/" },
+    { label: "ATS Resume Checker", href: "/ats-resume" },
     { label: "AI Mock Interview", href: "/ai-mock-interview" },
     { label: "Interview Practice", href: "/ai-interview-practice" },
     { label: "Interview Preparation", href: "/interview-preparation" },

@@ -8,6 +8,10 @@ export const MainRoutes = [
     href: "/ai-mock-interview",
   },
   {
+    label: "ATS Resume Checker",
+    href: "/ats-resume",
+  },
+  {
     label: "About",
     href: "/about",
   },

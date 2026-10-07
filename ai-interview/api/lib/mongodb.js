@@ -107,21 +107,42 @@ class MemoryCollection {
     return this.docs.find((d) => matchQuery(d, query)) || null;
   }
   find(query) {
-    const matched = this.docs.filter((d) => matchQuery(d, query));
-    return {
+    const docs = this.docs;
+    class MemoryCursor {
+      constructor(items) {
+        this.items = [...items];
+      }
       sort(sortObj = {}) {
-        const [field, dir] = Object.entries(sortObj)[0] || ["createdAt", -1];
-        const sorted = [...matched].sort((a, b) => {
-          if (a[field] < b[field]) return dir === 1 ? -1 : 1;
-          if (a[field] > b[field]) return dir === 1 ? 1 : -1;
-          return 0;
-        });
-        return {
-          toArray: async () => sorted,
-        };
-      },
-      toArray: async () => [...matched],
-    };
+        const entries = Object.entries(sortObj);
+        if (entries.length > 0) {
+          const [field, dir] = entries[0];
+          this.items.sort((a, b) => {
+            if (a[field] < b[field]) return dir === 1 ? -1 : 1;
+            if (a[field] > b[field]) return dir === 1 ? 1 : -1;
+            return 0;
+          });
+        }
+        return this;
+      }
+      limit(n) {
+        if (typeof n === "number" && n >= 0) {
+          this.items = this.items.slice(0, n);
+        }
+        return this;
+      }
+      skip(n) {
+        if (typeof n === "number" && n >= 0) {
+          this.items = this.items.slice(n);
+        }
+        return this;
+      }
+      async toArray() {
+        return [...this.items];
+      }
+    }
+
+    const matched = docs.filter((d) => matchQuery(d, query));
+    return new MemoryCursor(matched);
   }
   async insertOne(doc) {
     const id = new ObjectId();
@@ -217,6 +238,10 @@ export async function ensureIndexes(db) {
         { mockIdRef: 1, userId: 1, question: 1 },
         { background: true }
       ),
+      db.collection("codingSubmissions").createIndex({ userId: 1 }),
+      db.collection("codingSubmissions").createIndex({ createdAt: -1 }),
+      db.collection("codingSubmissions").createIndex({ userId: 1, createdAt: -1 }),
+      db.collection("codingSubmissions").createIndex({ questionId: 1, userId: 1 }),
     ]);
     indexesEnsured = true;
   } catch (error) {

@@ -140,6 +140,13 @@ const interviewTypesList = [
     icon: <FileText className="w-5 h-5 text-emerald-600" />,
     badge: "Personalized",
   },
+  {
+    title: "ATS Resume Checker",
+    desc: "Instant ATS score, detected role keywords, parseability & quality audit.",
+    href: "/ats-resume",
+    icon: <Zap className="w-5 h-5 text-indigo-600" />,
+    badge: "Free Tool",
+  },
 ];
 
 // Why MocInterview Features
@@ -533,6 +540,37 @@ export const HomePage = () => {
               <p className="text-sm text-gray-600 leading-relaxed">
                 Review your performance, identify weaknesses and improve for your next attempt.
               </p>
+            </div>
+          </div>
+        </Containers>
+      </section>
+
+      {/* ── 3.5. ATS RESUME CHECKER BANNER ──────────────────────────────── */}
+      <section className="py-12 bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-950 text-white relative overflow-hidden border-b border-indigo-900/40">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent pointer-events-none" />
+        <Containers>
+          <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8 p-8 md:p-10 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md">
+            <div className="space-y-3 text-left max-w-2xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+                <Zap className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Free ATS Resume Scanner</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+                Check Your ATS Resume Score Before Applying
+              </h2>
+              <p className="text-sm sm:text-base text-indigo-200/90 leading-relaxed">
+                Scan your resume against 8 ATS pillars — parseability, detected role keywords, quantifiable impact metrics, and layout compliance — without needing a job description.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 w-full sm:w-auto">
+              <Link to="/ats-resume" className="w-full sm:w-auto">
+                <Button
+                  size="lg"
+                  className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm px-7 py-6 rounded-xl shadow-lg shadow-indigo-600/30 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+                >
+                  Check ATS Score Free <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
             </div>
           </div>
         </Containers>

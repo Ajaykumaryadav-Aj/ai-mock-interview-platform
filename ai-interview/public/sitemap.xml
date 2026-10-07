@@ -28,6 +28,12 @@
 
   <!-- Commercial & Intent-Specific SEO Landing Pages -->
   <url>
+    <loc>https://mocinterview.vercel.app/ats-resume</loc>
+    <lastmod>2026-10-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+  </url>
+  <url>
     <loc>https://mocinterview.vercel.app/ai-mock-interview</loc>
     <lastmod>2026-10-05</lastmod>
     <changefreq>weekly</changefreq>

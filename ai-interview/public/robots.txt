@@ -21,6 +21,10 @@ Allow: /javascript-interview
 Allow: /flutter-interview
 Allow: /fresher-interview
 Allow: /resume-interview
+Allow: /ats-resume
+Allow: /ats
+Allow: /resume-score
+Allow: /ats-checker
 Allow: /blog
 Allow: /blog/*
 

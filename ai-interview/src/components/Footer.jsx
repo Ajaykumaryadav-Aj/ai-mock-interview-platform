@@ -58,6 +58,7 @@ export const Footer = () => {
           <div className="space-y-4">
             <h3 className="font-bold text-xs uppercase tracking-wider text-white">Product</h3>
             <ul className="space-y-2.5">
+              <FooterLink to="/ats-resume">ATS Resume Checker</FooterLink>
               <FooterLink to="/ai-mock-interview">AI Mock Interview</FooterLink>
               <FooterLink to="/technical-interview">Interview Types</FooterLink>
               <FooterLink to="/resume-interview">Resume Interview</FooterLink>

@@ -97,6 +97,34 @@ export default function NavigationRoutes({ isMobile = false, onItemClick }) {
           AI Mock Interview
         </NavLink>
 
+        <NavLink
+          to="/coding"
+          onClick={handleLinkClick}
+          className={({ isActive }) =>
+            cn(
+              "text-base font-medium py-1 transition-colors flex items-center gap-2",
+              isActive ? "text-emerald-700 font-bold" : "text-gray-700 hover:text-gray-900"
+            )
+          }
+        >
+          <Code className="w-4 h-4 text-emerald-600" />
+          Coding Round
+        </NavLink>
+
+        <NavLink
+          to="/ats-resume"
+          onClick={handleLinkClick}
+          className={({ isActive }) =>
+            cn(
+              "text-base font-medium py-1 transition-colors flex items-center gap-2",
+              isActive ? "text-indigo-700 font-bold" : "text-gray-700 hover:text-gray-900"
+            )
+          }
+        >
+          <FileText className="w-4 h-4 text-indigo-600" />
+          ATS Resume Score
+        </NavLink>
+
         {/* Mobile Accordion / Collapsible for Interview Types */}
         <div className="flex flex-col gap-2 pt-1 border-t border-gray-100">
           <button
@@ -207,6 +235,40 @@ export default function NavigationRoutes({ isMobile = false, onItemClick }) {
           }
         >
           AI Mock Interview
+        </NavLink>
+      </li>
+
+      <li>
+        <NavLink
+          to="/coding"
+          className={({ isActive }) =>
+            cn(
+              "px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5",
+              isActive
+                ? "text-emerald-700 bg-emerald-50/60 font-semibold"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+            )
+          }
+        >
+          <Code className="w-3.5 h-3.5 text-emerald-600" />
+          Coding Round
+        </NavLink>
+      </li>
+
+      <li>
+        <NavLink
+          to="/ats-resume"
+          className={({ isActive }) =>
+            cn(
+              "px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5",
+              isActive
+                ? "text-indigo-700 bg-indigo-50/60 font-semibold"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+            )
+          }
+        >
+          <FileText className="w-3.5 h-3.5 text-indigo-600" />
+          ATS Resume Score
         </NavLink>
       </li>
 

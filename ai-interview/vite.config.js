@@ -60,6 +60,12 @@ function localApiPlugin() {
           } else if (pathname === "/api/gemini") {
             const mod = await import("./api/gemini.js");
             handler = mod.default;
+          } else if (pathname === "/api/coding" || pathname.startsWith("/api/coding/")) {
+            const mod = await import("./api/coding.js");
+            handler = mod.default;
+          } else if (pathname === "/api/ats" || pathname.startsWith("/api/ats/")) {
+            const mod = await import("./api/ats.js");
+            handler = mod.default;
           }
 
           if (handler) {

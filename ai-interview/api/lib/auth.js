@@ -41,8 +41,8 @@ export function extractSessionToken(req) {
  * @returns {Promise<{ userId: string|null, error: string|null, payload: Object|null }>}
  */
 export async function authenticateRequest(req) {
-  // Safe test runner hook enabled ONLY when NODE_ENV === "test"
-  if (process.env.NODE_ENV === "test" && req.headers?.["x-test-user-id"]) {
+  // Safe test runner hook enabled when NODE_ENV === "test" or in local development with explicit test header
+  if ((process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development") && req.headers?.["x-test-user-id"]) {
     return {
       userId: req.headers["x-test-user-id"],
       error: null,

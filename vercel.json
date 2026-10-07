@@ -4,6 +4,10 @@
   "outputDirectory": "ai-interview/dist",
   "rewrites": [
     {
+      "source": "/api/coding/(.*)",
+      "destination": "/api/coding?action=$1"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     },
