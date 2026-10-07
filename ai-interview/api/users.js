@@ -3,8 +3,8 @@
 // Authenticated via Clerk session token; strictly isolates data by authenticated userId.
 
 import { handleCors } from "./_cors.js";
-import { authenticateRequest } from "./lib/auth.js";
-import { getDb } from "./lib/mongodb.js";
+import { authenticateRequest } from "./_lib/auth.js";
+import { getDb } from "./_lib/mongodb.js";
 
 export default async function handler(req, res) {
   // CORS Preflight

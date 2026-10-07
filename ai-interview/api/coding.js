@@ -13,9 +13,9 @@
 import { ObjectId } from "mongodb";
 import { GoogleGenAI } from "@google/genai";
 import { handleCors } from "./_cors.js";
-import { authenticateRequest } from "./lib/auth.js";
-import { getDb, ensureIndexes } from "./lib/mongodb.js";
-import { runCustomInput, evaluateCode } from "./lib/codingJudge.js";
+import { authenticateRequest } from "./_lib/auth.js";
+import { getDb, ensureIndexes } from "./_lib/mongodb.js";
+import { runCustomInput, evaluateCode } from "./_lib/codingJudge.js";
 import { CODING_QUESTIONS } from "../src/data/codingQuestionsData.js";
 
 let geminiClient = null;

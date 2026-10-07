@@ -1,6 +1,6 @@
 // scripts/verify_ats_triplet.mjs
-import { calculateAtsScore } from "../api/lib/atsScorer.js";
-import { generateAtsSuggestions, generateAtsInterviewQuestions } from "../api/lib/atsAi.js";
+import { calculateAtsScore } from "../api/_lib/atsScorer.js";
+import { generateAtsSuggestions, generateAtsInterviewQuestions } from "../api/_lib/atsAi.js";
 
 const resumeA = `
 Alex Mercer (Full Stack)

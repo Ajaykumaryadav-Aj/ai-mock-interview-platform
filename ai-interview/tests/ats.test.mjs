@@ -33,8 +33,8 @@ import {
   calculateAtsScore,
   detectCandidateProfile,
   TECH_SYNONYMS,
-} from "../api/lib/atsScorer.js";
-import { generateAtsInterviewQuestions } from "../api/lib/atsAi.js";
+} from "../api/_lib/atsScorer.js";
+import { generateAtsInterviewQuestions } from "../api/_lib/atsAi.js";
 import atsHandler from "../api/ats.js";
 
 // Helper for mocking req/res

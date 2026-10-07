@@ -1,5 +1,4 @@
-// scripts/verify_real_test_scenarios.mjs
-import { calculateAtsScore, validateJobDescription } from "../api/lib/atsScorer.js";
+import { calculateAtsScore, validateJobDescription } from "../api/_lib/atsScorer.js";
 
 const ajayResume = `
 AJAY KUMAR

@@ -6,14 +6,14 @@
 
 import { ObjectId } from "mongodb";
 import { handleCors } from "./_cors.js";
-import { authenticateRequest } from "./lib/auth.js";
-import { getDb } from "./lib/mongodb.js";
-import { calculateAtsScore } from "./lib/atsScorer.js";
+import { authenticateRequest } from "./_lib/auth.js";
+import { getDb } from "./_lib/mongodb.js";
+import { calculateAtsScore } from "./_lib/atsScorer.js";
 import {
   generateAtsSuggestions,
   generateImprovedResume,
   generateAtsInterviewQuestions,
-} from "./lib/atsAi.js";
+} from "./_lib/atsAi.js";
 
 export default async function handler(req, res) {
   // Always guarantee application/json header

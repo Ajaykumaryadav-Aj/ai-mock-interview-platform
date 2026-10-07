@@ -18,7 +18,7 @@ process.env.NODE_ENV = "test";
 
 // Import modules under test
 import codingHandler from "../api/coding.js";
-import { compareOutputs, normalizeValue } from "../api/lib/outputComparator.js";
+import { compareOutputs, normalizeValue } from "../api/_lib/outputComparator.js";
 
 function createMockReqRes({ method = "GET", url = "/api/coding", query = {}, body = {}, headers = {} }) {
   const req = {

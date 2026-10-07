@@ -34,10 +34,10 @@ process.env.NODE_ENV = "test";
 // Import API handlers directly
 import usersHandler from "../api/users.js";
 import interviewsHandler from "../api/interviews.js";
-import interviewDetailHandler from "../api/interviews/[id].js";
+const interviewDetailHandler = interviewsHandler;
 import userAnswersHandler from "../api/user-answers.js";
 import geminiHandler from "../api/gemini.js";
-import { getDb, closeConnection } from "../api/lib/mongodb.js";
+import { getDb, closeConnection } from "../api/_lib/mongodb.js";
 
 function createMockReqRes({ method = "GET", url = "/", headers = {}, body = null, query = {} } = {}) {
   const req = {

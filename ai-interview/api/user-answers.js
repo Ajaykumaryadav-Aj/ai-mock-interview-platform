@@ -4,8 +4,8 @@
 
 import { ObjectId } from "mongodb";
 import { handleCors } from "./_cors.js";
-import { authenticateRequest } from "./lib/auth.js";
-import { getDb } from "./lib/mongodb.js";
+import { authenticateRequest } from "./_lib/auth.js";
+import { getDb } from "./_lib/mongodb.js";
 
 export function formatAnswerDoc(doc) {
   if (!doc) return null;
