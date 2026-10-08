@@ -5,11 +5,13 @@ export const LoaderPage = ({ className }) => {
   return (
     <div
       className={cn(
-        "w-screen h-screen flex items-center justify-center bg-transparent z-50",
+        "w-full min-h-[50vh] flex flex-col items-center justify-center gap-3 bg-transparent",
         className
       )}
+      role="status"
+      aria-label="Loading content"
     >
-      <Loader className="w-6 h-6 min-w-6 min-h-6 animate-spin text-emerald-500" />
+      <Loader className="w-7 h-7 min-w-7 min-h-7 animate-spin text-emerald-600" />
     </div>
   );
 };
