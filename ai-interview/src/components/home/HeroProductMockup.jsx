@@ -39,9 +39,9 @@ export const HeroProductMockup = () => {
             <div className="text-[11px] text-gray-400 uppercase tracking-wider font-semibold">
               Role & Interview Track
             </div>
-            <div className="text-white font-bold text-sm flex items-center gap-2 mt-0.5">
-              Senior Frontend Engineer
-              <Badge className="bg-purple-900/60 text-purple-300 border-purple-700/60 text-[10px] py-0 px-2 font-normal">
+            <div className="text-white font-bold text-sm flex flex-wrap items-center gap-1.5 mt-0.5">
+              <span>Senior Frontend Engineer</span>
+              <Badge className="bg-purple-900/60 text-purple-300 border-purple-700/60 text-[10px] py-0 px-2 font-normal whitespace-nowrap">
                 React & System Architecture
               </Badge>
             </div>

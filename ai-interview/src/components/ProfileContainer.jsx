@@ -28,19 +28,20 @@ export const ProfileContainer = () => {
   }
 
   return (
-    <div className="flex items-center gap-2 sm:gap-3">
+    <div className="flex items-center gap-1.5 sm:gap-2.5">
       <Link
         to="/signin"
-        className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-2 py-1"
+        className="hidden sm:inline-flex text-xs sm:text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-1.5 sm:px-2 py-1 whitespace-nowrap"
       >
         Sign In
       </Link>
       <Link to="/generate">
         <Button
           size="sm"
-          className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-sm h-9 px-3.5 sm:px-4 rounded-xl shadow-xs transition-all hover:scale-[1.02]"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-4 rounded-xl shadow-xs transition-all hover:scale-[1.02] whitespace-nowrap"
         >
-          Start Free Interview
+          <span className="hidden md:inline">Start Free Interview</span>
+          <span className="md:hidden">Start Free</span>
         </Button>
       </Link>
     </div>

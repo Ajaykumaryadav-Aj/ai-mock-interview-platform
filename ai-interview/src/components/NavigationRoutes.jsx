@@ -205,13 +205,13 @@ export default function NavigationRoutes({ isMobile = false, onItemClick }) {
 
   // Desktop Navigation
   return (
-    <ul className="flex items-center gap-1 lg:gap-2">
+    <ul className="flex items-center gap-0.5 lg:gap-1 xl:gap-2">
       <li>
         <NavLink
           to="/"
           className={({ isActive }) =>
             cn(
-              "px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+              "px-2.5 xl:px-3 py-1.5 xl:py-2 rounded-lg text-xs xl:text-sm font-medium whitespace-nowrap transition-colors",
               isActive
                 ? "text-emerald-700 bg-emerald-50/60 font-semibold"
                 : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
@@ -227,14 +227,14 @@ export default function NavigationRoutes({ isMobile = false, onItemClick }) {
           to="/ai-mock-interview"
           className={({ isActive }) =>
             cn(
-              "px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+              "px-2.5 xl:px-3 py-1.5 xl:py-2 rounded-lg text-xs xl:text-sm font-medium whitespace-nowrap transition-colors",
               isActive
                 ? "text-emerald-700 bg-emerald-50/60 font-semibold"
                 : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
             )
           }
         >
-          AI Mock Interview
+          <span className="hidden xl:inline">AI </span>Mock Interview
         </NavLink>
       </li>
 
@@ -243,15 +243,15 @@ export default function NavigationRoutes({ isMobile = false, onItemClick }) {
           to="/coding"
           className={({ isActive }) =>
             cn(
-              "px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5",
+              "px-2.5 xl:px-3 py-1.5 xl:py-2 rounded-lg text-xs xl:text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-1 xl:gap-1.5",
               isActive
                 ? "text-emerald-700 bg-emerald-50/60 font-semibold"
                 : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
             )
           }
         >
-          <Code className="w-3.5 h-3.5 text-emerald-600" />
-          Coding Round
+          <Code className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+          <span>Coding<span className="hidden xl:inline"> Round</span></span>
         </NavLink>
       </li>
 
@@ -260,15 +260,15 @@ export default function NavigationRoutes({ isMobile = false, onItemClick }) {
           to="/ats-resume"
           className={({ isActive }) =>
             cn(
-              "px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5",
+              "px-2.5 xl:px-3 py-1.5 xl:py-2 rounded-lg text-xs xl:text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-1 xl:gap-1.5",
               isActive
                 ? "text-indigo-700 bg-indigo-50/60 font-semibold"
                 : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
             )
           }
         >
-          <FileText className="w-3.5 h-3.5 text-indigo-600" />
-          ATS Resume Score
+          <FileText className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+          <span>ATS <span className="hidden xl:inline">Resume </span>Score</span>
         </NavLink>
       </li>
 
@@ -284,16 +284,16 @@ export default function NavigationRoutes({ isMobile = false, onItemClick }) {
           onClick={() => setOpenDropdown(openDropdown === "types" ? null : "types")}
           aria-expanded={openDropdown === "types"}
           className={cn(
-            "flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+            "flex items-center gap-1 xl:gap-1.5 px-2.5 xl:px-3 py-1.5 xl:py-2 rounded-lg text-xs xl:text-sm font-medium whitespace-nowrap transition-colors",
             openDropdown === "types"
               ? "text-emerald-700 bg-emerald-50/60 font-semibold"
               : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
           )}
         >
-          <span>Interview Types</span>
+          <span><span className="hidden xl:inline">Interview </span>Types</span>
           <ChevronDown
             className={cn(
-              "w-3.5 h-3.5 transition-transform duration-200 text-gray-400",
+              "w-3.5 h-3.5 transition-transform duration-200 text-gray-400 shrink-0",
               openDropdown === "types" && "rotate-180 text-emerald-600"
             )}
           />
@@ -339,7 +339,7 @@ export default function NavigationRoutes({ isMobile = false, onItemClick }) {
           onClick={() => setOpenDropdown(openDropdown === "resources" ? null : "resources")}
           aria-expanded={openDropdown === "resources"}
           className={cn(
-            "flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+            "flex items-center gap-1 xl:gap-1.5 px-2.5 xl:px-3 py-1.5 xl:py-2 rounded-lg text-xs xl:text-sm font-medium whitespace-nowrap transition-colors",
             openDropdown === "resources"
               ? "text-emerald-700 bg-emerald-50/60 font-semibold"
               : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
@@ -348,7 +348,7 @@ export default function NavigationRoutes({ isMobile = false, onItemClick }) {
           <span>Resources</span>
           <ChevronDown
             className={cn(
-              "w-3.5 h-3.5 transition-transform duration-200 text-gray-400",
+              "w-3.5 h-3.5 transition-transform duration-200 text-gray-400 shrink-0",
               openDropdown === "resources" && "rotate-180 text-emerald-600"
             )}
           />
@@ -391,7 +391,7 @@ export default function NavigationRoutes({ isMobile = false, onItemClick }) {
           to="/about"
           className={({ isActive }) =>
             cn(
-              "px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+              "px-2.5 xl:px-3 py-1.5 xl:py-2 rounded-lg text-xs xl:text-sm font-medium whitespace-nowrap transition-colors",
               isActive
                 ? "text-emerald-700 bg-emerald-50/60 font-semibold"
                 : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"

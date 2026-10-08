@@ -4,9 +4,9 @@
 export const LANDING_PAGES = {
   "ai-mock-interview": {
     slug: "ai-mock-interview",
-    title: "AI Mock Interview Online | Intelligent AI Interview Simulation & Evaluation",
+    title: "AI Mock Interview Online Practice | MocInterview",
     description:
-      "Practice realistic AI mock interviews customized to your job role, tech stack, and seniority. Get adaptive questions, instant AI scoring, and benchmark model answers.",
+      "Practice realistic AI mock interviews with adaptive questions, voice answers, instant objective scoring, and benchmark model answers.",
     h1: "Intelligent AI Mock Interview Simulation & Real-Time Evaluation",
     subtitle:
       "Experience high-stakes hiring rounds guided by generative AI. Get adaptive questioning, voice-enabled interaction, instant objective grading, and benchmark response analysis.",
@@ -70,9 +70,9 @@ export const LANDING_PAGES = {
 
   "mock-interview": {
     slug: "mock-interview",
-    title: "Online Mock Interview | Practice Real Interviews & Build Confidence",
+    title: "Online Mock Interview Practice | MocInterview",
     description:
-      "Prepare for upcoming job interviews with realistic online mock interviews. Experience authentic interview formats, overcome anxiety, and build lasting confidence.",
+      "Practice realistic online mock interviews, overcome anxiety, and structure winning answers for engineering and HR rounds.",
     h1: "Online Mock Interviews to Prepare for Real-World Hiring Rounds",
     subtitle:
       "Eliminate interview anxiety through realistic online interview simulation. Rehearse real-world question formats, structure articulate answers, and build confidence before your real interview.",
@@ -503,9 +503,9 @@ export const LANDING_PAGES = {
 
   "javascript-interview": {
     slug: "javascript-interview",
-    title: "JavaScript Mock Interview Online | Event Loop, Closures & Async JS",
+    title: "JavaScript Mock Interview Practice | MocInterview",
     description:
-      "Master JavaScript technical interviews. Practice questions on closures, scope, prototypes, promises, async/await, and the Event Loop with instant AI scoring.",
+      "Master JavaScript technical interviews. Practice Event Loop, closures, prototypes, promises, and async/await with instant AI scoring.",
     h1: "JavaScript Mock Interview Online Practice",
     subtitle:
       "Deepen your JavaScript expertise. Conquer closures, prototypes, hoisting, the microtask queue, and modern ECMAScript features.",

@@ -323,9 +323,8 @@ export const CodingRoundPage = () => {
           {submissionResult && (
             <Button
               size="sm"
-              variant="outline"
               onClick={() => setIsScorecardOpen(true)}
-              className="text-xs border-emerald-500/40 text-emerald-400 hover:bg-emerald-950/40 h-8 cursor-pointer"
+              className="text-xs bg-gray-900 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-950/60 h-8 cursor-pointer rounded-lg font-medium"
             >
               Scorecard ({submissionResult.overallScore}/100)
             </Button>

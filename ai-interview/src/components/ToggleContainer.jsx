@@ -19,7 +19,7 @@ export const ToggleContainer = () => {
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger className="p-2 rounded-lg text-gray-700 hover:text-gray-900 hover:bg-gray-100 md:hidden transition-colors" aria-label="Open mobile menu">
+      <SheetTrigger className="p-2 rounded-lg text-gray-700 hover:text-gray-900 hover:bg-gray-100 lg:hidden transition-colors" aria-label="Open mobile menu">
         <Menu className="w-5 h-5" />
       </SheetTrigger>
       <SheetContent side="right" className="w-[300px] sm:w-[360px] p-6 flex flex-col justify-between overflow-y-auto">

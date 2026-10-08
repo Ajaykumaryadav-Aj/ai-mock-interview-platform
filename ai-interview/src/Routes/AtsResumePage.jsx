@@ -296,8 +296,8 @@ export const AtsResumePage = () => {
   return (
     <div className="w-full min-h-screen bg-slate-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 py-8 px-4 sm:px-6 lg:px-8">
       <SEO
-        title="Free ATS Resume Checker – Instant ATS Score & Quality Audit | MocInterview"
-        description="Check your ATS resume score online for free. Automatically detects your role (Frontend, Flutter, Full Stack, Software Engineer) and audits ATS parseability, keywords, impact metrics, and structure."
+        title="Free ATS Resume Checker &amp; Score Calculator | MocInterview"
+        description="Check your ATS resume score online for free. Get instant analysis on keywords, parseability, quantified impact, and formatting fixes."
         canonical="/ats-resume"
         structuredData={structuredData}
         breadcrumbs={breadcrumbs}

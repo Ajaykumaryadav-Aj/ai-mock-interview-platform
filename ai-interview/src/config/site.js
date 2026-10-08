@@ -6,9 +6,9 @@ export const SITE_NAME = "MocInterview";
 export const BRAND_TAGLINE = "AI Mock Interview Platform";
 
 export const DEFAULT_SEO = {
-  title: "AI Mock Interview Platform | Practice Interviews with AI | MocInterview",
+  title: "Free AI Mock Interview Platform for Freshers | MocInterview",
   description:
-    "Practice realistic AI mock interviews with instant scoring and actionable feedback. Tailored technical, HR, behavioral, and resume-based interview prep for developers and freshers.",
+    "Practice live interviews with our free Vercel AI mock interview platform. Best for college students and frontend developer freshers looking for instant feedback.",
   canonical: SITE_URL,
   ogImage: `${SITE_URL}/assets/img/og-mocinterview.png`,
   ogType: "website",
@@ -17,24 +17,22 @@ export const DEFAULT_SEO = {
 
 export const PRIMARY_KEYWORDS = [
   "AI mock interview",
-  "AI interview platform",
-  "AI interview practice",
-  "online mock interview",
+  "mock interview",
   "mock interview online",
-  "AI interview preparation",
-  "interview practice platform",
-  "technical mock interview",
-  "HR mock interview",
-  "behavioral mock interview",
-  "interview preparation online",
-  "mock interview for freshers",
-  "interview practice for software developers",
-  "resume based mock interview",
-  "ATS resume checker",
+  "javascript mock interview",
+  "javascript interview practice",
+  "ATS checker",
   "free ATS resume score",
   "ATS resume scanner",
   "check resume ATS score online",
   "resume score calculator",
+  "AI interview platform",
+  "AI interview practice",
+  "technical mock interview",
+  "HR mock interview",
+  "behavioral mock interview",
+  "interview practice for developers",
+  "fresher mock interview",
   "ATS compatibility check",
 ];
 

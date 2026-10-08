@@ -371,8 +371,8 @@ export const HomePage = () => {
   return (
     <div className="flex flex-col w-full bg-white text-gray-900 min-h-screen">
       <SEO
-        title="AI Mock Interview Platform | Practice Interviews with AI | MocInterview"
-        description="Practice realistic AI mock interviews with instant voice evaluation, scoring, and actionable feedback. Master technical, HR, and resume-based rounds with MocInterview."
+        title="Free AI Mock Interview Platform for Freshers | MocInterview"
+        description="Practice live interviews with our free Vercel AI mock interview platform. Best for college students and frontend developer freshers looking for instant feedback."
         canonical="/"
         structuredData={structuredData}
       />
@@ -380,26 +380,26 @@ export const HomePage = () => {
       {/* ── 1. HERO SECTION ──────────────────────────────────────────────── */}
       <section className="relative pt-12 pb-20 md:pt-16 md:pb-28 overflow-hidden bg-gradient-to-b from-emerald-50/40 via-white to-white border-b border-gray-100">
         <Containers>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-8 xl:gap-12 items-center">
             {/* Left Side Copy */}
-            <div className="lg:col-span-6 space-y-6 text-left">
+            <div className="lg:col-span-7 xl:col-span-6 space-y-6 text-left">
               {/* Eyebrow */}
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs font-bold tracking-wide uppercase">
                 <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                AI-POWERED INTERVIEW PRACTICE
+                AI MOCK INTERVIEW &amp; ATS CHECKER
               </div>
 
               {/* Main H1 */}
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-gray-950 tracking-tight leading-[1.12]">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[42px] xl:text-6xl font-black text-gray-950 tracking-tight leading-[1.14]">
                 Ace Your Next Interview With{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800">
-                  AI-Powered Practice
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 inline-block sm:inline">
+                  AI Mock Practice
                 </span>
               </h1>
 
               {/* Supporting Text */}
               <p className="text-base sm:text-lg text-gray-600 leading-relaxed max-w-xl">
-                Practice realistic interviews, answer questions with confidence, and get instant AI-powered feedback to improve before the real interview.
+                Practice realistic AI mock interviews, master JavaScript &amp; technical rounds, and check your resume ATS score with instant, personalized feedback.
               </p>
 
               {/* CTA Buttons */}
@@ -412,6 +412,15 @@ export const HomePage = () => {
                     Start Free Interview <ArrowRight className="w-4 h-4 ml-0.5" />
                   </Button>
                 </Link>
+                <Link to="/ats-resume">
+                  <Button
+                    size="lg"
+                    className="w-full sm:w-auto bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 font-semibold text-base px-6 py-6 rounded-xl flex items-center justify-center gap-2 shadow-xs transition-all"
+                  >
+                    <Zap className="w-4 h-4 text-emerald-600" />
+                    Check ATS Score
+                  </Button>
+                </Link>
                 <a
                   href="#how-it-works"
                   onClick={handleScrollToHowItWorks}
@@ -419,12 +428,35 @@ export const HomePage = () => {
                 >
                   <Button
                     size="lg"
-                    variant="outline"
-                    className="w-full sm:w-auto border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold text-base px-6 py-6 rounded-xl"
+                    variant="ghost"
+                    className="w-full sm:w-auto text-gray-600 hover:text-gray-900 font-semibold text-base px-4 py-6 rounded-xl"
                   >
-                    See How It Works
+                    How It Works
                   </Button>
                 </a>
+              </div>
+
+              {/* Quick High-Intent Links */}
+              <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-gray-500">
+                <span className="font-semibold text-gray-700">Top Tracks:</span>
+                <Link
+                  to="/javascript-interview"
+                  className="px-2.5 py-1 rounded-md bg-amber-50 text-amber-900 hover:bg-amber-100 font-medium transition-colors border border-amber-200/60"
+                >
+                  JavaScript Mock Interview
+                </Link>
+                <Link
+                  to="/ats-resume"
+                  className="px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-900 hover:bg-indigo-100 font-medium transition-colors border border-indigo-200/60"
+                >
+                  Free ATS Checker
+                </Link>
+                <Link
+                  to="/technical-interview"
+                  className="px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-900 hover:bg-emerald-100 font-medium transition-colors border border-emerald-200/60"
+                >
+                  Technical Prep
+                </Link>
               </div>
 
               {/* Trust & Benefit Bullet Points */}
@@ -449,7 +481,7 @@ export const HomePage = () => {
             </div>
 
             {/* Right Side: Realistic Product Mockup */}
-            <div className="lg:col-span-6 flex justify-center">
+            <div className="lg:col-span-5 xl:col-span-6 flex justify-center w-full">
               <HeroProductMockup />
             </div>
           </div>
@@ -953,10 +985,9 @@ export const HomePage = () => {
               <Link to="/ai-mock-interview" className="w-full sm:w-auto">
                 <Button
                   size="lg"
-                  variant="outline"
-                  className="w-full sm:w-auto border-white/30 text-white hover:bg-white/10 font-semibold text-base px-7 py-6 rounded-xl"
+                  className="w-full sm:w-auto bg-emerald-950/70 hover:bg-emerald-900 text-white border border-emerald-400/60 font-semibold text-base px-8 py-6 rounded-xl shadow-md hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
                 >
-                  Explore Interview Types
+                  Explore Interview Types <ArrowRight className="w-4 h-4 text-emerald-300" />
                 </Button>
               </Link>
             </div>
