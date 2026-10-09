@@ -3,8 +3,9 @@
 // Authenticated via Clerk session token; strictly isolates data by authenticated userId.
 
 import { handleCors } from "./_cors.js";
-import { authenticateRequest } from "./_lib/auth.js";
+import { authenticateRequest, applyPrivateSecurityHeaders } from "./_lib/auth.js";
 import { getDb } from "./_lib/mongodb.js";
+import { checkRateLimit, setRateLimitHeaders } from "./_lib/rateLimiter.js";
 
 export default async function handler(req, res) {
   // CORS Preflight
@@ -20,6 +21,8 @@ export default async function handler(req, res) {
   if (req.headers.origin && !isAllowed) {
     return res.status(403).json({ error: "Origin not permitted by CORS policy." });
   }
+
+  applyPrivateSecurityHeaders(res);
 
   // Authenticate user
   const { userId, error: authError } = await authenticateRequest(req);
@@ -51,14 +54,36 @@ export default async function handler(req, res) {
 
     // ── POST: Upsert authenticated user's profile ───────────────────────────
     if (req.method === "POST") {
+      const rateLimitKey = `user_profile_post_${userId}`;
+      const rlResult = await checkRateLimit(rateLimitKey, {
+        limit: 30,
+        windowMs: 60 * 1000,
+      });
+      setRateLimitHeaders(res, rlResult);
+      if (!rlResult.allowed) {
+        return res.status(429).json({
+          error: "Too many profile updates. Please slow down.",
+        });
+      }
+
       const { name, email, imageUrl } = req.body || {};
+      const safeName = typeof name === "string" ? name.trim().slice(0, 120) : "Anonymous";
+      const safeEmail = typeof email === "string" ? email.trim().slice(0, 255) : "N/A";
+      let safeImageUrl = "";
+      if (typeof imageUrl === "string") {
+        const trimmed = imageUrl.trim();
+        if (/^(https?:\/\/|\/|data:image\/)/i.test(trimmed) && trimmed.length <= 2048) {
+          safeImageUrl = trimmed;
+        }
+      }
+
       const now = new Date();
 
       const updateDoc = {
         $set: {
-          name: typeof name === "string" ? name.trim() : "Anonymous",
-          email: typeof email === "string" ? email.trim() : "N/A",
-          imageUrl: typeof imageUrl === "string" ? imageUrl.trim() : "",
+          name: safeName || "Anonymous",
+          email: safeEmail || "N/A",
+          imageUrl: safeImageUrl,
           updatedAt: now,
         },
         $setOnInsert: {

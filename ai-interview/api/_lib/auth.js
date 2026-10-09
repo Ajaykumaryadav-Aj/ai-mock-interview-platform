@@ -41,12 +41,17 @@ export function extractSessionToken(req) {
  * @returns {Promise<{ userId: string|null, error: string|null, payload: Object|null }>}
  */
 export async function authenticateRequest(req) {
-  // Safe test runner hook enabled when NODE_ENV === "test" or in local development with explicit test header
-  if ((process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development") && req.headers?.["x-test-user-id"]) {
+  // Test hook strictly restricted to automated test runners (NODE_ENV === "test" and NEVER on Vercel)
+  if (
+    process.env.NODE_ENV === "test" &&
+    !process.env.VERCEL &&
+    req.headers?.["x-test-user-id"]
+  ) {
+    const testId = String(req.headers["x-test-user-id"]).trim();
     return {
-      userId: req.headers["x-test-user-id"],
+      userId: testId,
       error: null,
-      payload: { sub: req.headers["x-test-user-id"] },
+      payload: { sub: testId },
     };
   }
 
@@ -128,6 +133,18 @@ export async function authenticateRequest(req) {
       payload: null,
     };
   }
+}
+
+/**
+ * Enforces production cache-control and MIME-sniffing headers on private API endpoints.
+ *
+ * @param {import("http").ServerResponse} res
+ */
+export function applyPrivateSecurityHeaders(res) {
+  if (!res) return;
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("X-Content-Type-Options", "nosniff");
 }
 
 export default authenticateRequest;

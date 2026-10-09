@@ -4,7 +4,7 @@
 
 import { ObjectId } from "mongodb";
 import { handleCors } from "./_cors.js";
-import { authenticateRequest } from "./_lib/auth.js";
+import { authenticateRequest, applyPrivateSecurityHeaders } from "./_lib/auth.js";
 import { getDb } from "./_lib/mongodb.js";
 
 export function formatAnswerDoc(doc) {
@@ -31,6 +31,8 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: "Origin not permitted by CORS policy." });
   }
 
+  applyPrivateSecurityHeaders(res);
+
   // Authenticate user
   const { userId, error: authError } = await authenticateRequest(req);
   if (!userId) {
@@ -44,17 +46,20 @@ export default async function handler(req, res) {
     // ── GET: Fetch all user answers for a specific interview ────────────────
     if (req.method === "GET") {
       const interviewId = req.query.interviewId || req.query.mockIdRef;
-      if (!interviewId) {
-        return res.status(400).json({ error: "interviewId parameter is required." });
+      if (!interviewId || typeof interviewId !== "string" || interviewId.length > 64) {
+        return res.status(400).json({ error: "interviewId parameter is required and must be valid." });
       }
+
+      const cleanInterviewId = String(interviewId).trim();
 
       // Check interview ownership
       const interviewsCollection = db.collection("interviews");
       let filter;
-      if (ObjectId.isValid(String(interviewId))) {
-        filter = { $or: [{ _id: new ObjectId(String(interviewId)) }, { id: String(interviewId) }] };
+      const isHex24 = /^[0-9a-fA-F]{24}$/.test(cleanInterviewId);
+      if (isHex24 && ObjectId.isValid(cleanInterviewId)) {
+        filter = { $or: [{ _id: new ObjectId(cleanInterviewId) }, { id: cleanInterviewId }] };
       } else {
-        filter = { id: String(interviewId) };
+        filter = { id: cleanInterviewId };
       }
       const interview = await interviewsCollection.findOne(filter);
       if (interview && interview.userId !== userId) {
@@ -64,7 +69,7 @@ export default async function handler(req, res) {
       // Query answers strictly scoped to authenticated user and target interview
       const answers = await userAnswersCollection
         .find({
-          mockIdRef: String(interviewId),
+          mockIdRef: cleanInterviewId,
           userId,
         })
         .sort({ createdAt: 1 })
@@ -84,19 +89,35 @@ export default async function handler(req, res) {
         rating,
       } = req.body || {};
 
-      if (!mockIdRef || !question) {
+      if (!mockIdRef || typeof mockIdRef !== "string" || mockIdRef.trim().length === 0 || mockIdRef.length > 64) {
         return res.status(400).json({
-          error: "mockIdRef and question are required to save an answer.",
+          error: "mockIdRef is required (max 64 chars).",
         });
       }
+
+      if (!question || typeof question !== "string" || question.trim().length === 0 || question.length > 5000) {
+        return res.status(400).json({
+          error: "question is required (1-5000 chars).",
+        });
+      }
+
+      const cleanMockIdRef = String(mockIdRef).trim();
+      const cleanQuestion = String(question).trim();
+
+      const safeCorrectAns = typeof correct_ans === "string" ? correct_ans.slice(0, 15000) : "";
+      const safeUserAns = typeof user_ans === "string" ? user_ans.slice(0, 15000) : "";
+      const safeFeedback = typeof feedback === "string" ? feedback.slice(0, 15000) : "";
+      const parsedRating = Number(rating);
+      const safeRating = Number.isFinite(parsedRating) ? Math.max(0, Math.min(10, Math.round(parsedRating))) : 0;
 
       // Check interview ownership
       const interviewsCollection = db.collection("interviews");
       let interviewFilter;
-      if (ObjectId.isValid(String(mockIdRef))) {
-        interviewFilter = { $or: [{ _id: new ObjectId(String(mockIdRef)) }, { id: String(mockIdRef) }] };
+      const isHex24 = /^[0-9a-fA-F]{24}$/.test(cleanMockIdRef);
+      if (isHex24 && ObjectId.isValid(cleanMockIdRef)) {
+        interviewFilter = { $or: [{ _id: new ObjectId(cleanMockIdRef) }, { id: cleanMockIdRef }] };
       } else {
-        interviewFilter = { id: String(mockIdRef) };
+        interviewFilter = { id: cleanMockIdRef };
       }
       const interview = await interviewsCollection.findOne(interviewFilter);
       if (interview && interview.userId !== userId) {
@@ -105,9 +126,9 @@ export default async function handler(req, res) {
 
       const now = new Date();
       const existing = await userAnswersCollection.findOne({
-        mockIdRef: String(mockIdRef),
+        mockIdRef: cleanMockIdRef,
         userId,
-        question: String(question),
+        question: cleanQuestion,
       });
 
       if (existing) {
@@ -116,10 +137,10 @@ export default async function handler(req, res) {
           { _id: existing._id },
           {
             $set: {
-              correct_ans: typeof correct_ans === "string" ? correct_ans : "",
-              user_ans: typeof user_ans === "string" ? user_ans : "",
-              feedback: typeof feedback === "string" ? feedback : "",
-              rating: typeof rating === "number" ? rating : Number(rating) || 0,
+              correct_ans: safeCorrectAns,
+              user_ans: safeUserAns,
+              feedback: safeFeedback,
+              rating: safeRating,
               updatedAt: now,
             },
           }
@@ -128,26 +149,26 @@ export default async function handler(req, res) {
         return res.status(200).json({
           id: existing._id.toString(),
           updated: true,
-          mockIdRef: String(mockIdRef),
+          mockIdRef: cleanMockIdRef,
           userId,
-          question: String(question),
-          correct_ans,
-          user_ans,
-          feedback,
-          rating,
+          question: cleanQuestion,
+          correct_ans: safeCorrectAns,
+          user_ans: safeUserAns,
+          feedback: safeFeedback,
+          rating: safeRating,
           updatedAt: now,
         });
       }
 
       // Insert new answer record
       const newDoc = {
-        mockIdRef: String(mockIdRef),
+        mockIdRef: cleanMockIdRef,
         userId, // Server-derived from verified Clerk session
-        question: String(question),
-        correct_ans: typeof correct_ans === "string" ? correct_ans : "",
-        user_ans: typeof user_ans === "string" ? user_ans : "",
-        feedback: typeof feedback === "string" ? feedback : "",
-        rating: typeof rating === "number" ? rating : Number(rating) || 0,
+        question: cleanQuestion,
+        correct_ans: safeCorrectAns,
+        user_ans: safeUserAns,
+        feedback: safeFeedback,
+        rating: safeRating,
         createdAt: now,
         updatedAt: now,
       };

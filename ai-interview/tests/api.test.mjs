@@ -37,6 +37,8 @@ import interviewsHandler from "../api/interviews.js";
 const interviewDetailHandler = interviewsHandler;
 import userAnswersHandler from "../api/user-answers.js";
 import geminiHandler from "../api/gemini.js";
+import codingHandler from "../api/coding.js";
+import atsHandler from "../api/ats.js";
 import { getDb, closeConnection } from "../api/_lib/mongodb.js";
 
 function createMockReqRes({ method = "GET", url = "/", headers = {}, body = null, query = {} } = {}) {
@@ -133,6 +135,14 @@ describe("API & Security Integration Tests", () => {
     it("GET /api/user-answers without token returns 401", async () => {
       const { req, res } = createMockReqRes({ method: "GET", url: "/api/user-answers" });
       await userAnswersHandler(req, res);
+      const result = res.getResponse();
+      assert.equal(result.status, 401);
+      assert.match(result.data.error, /Authentication required/);
+    });
+
+    it("POST /api/gemini without token returns 401", async () => {
+      const { req, res } = createMockReqRes({ method: "POST", url: "/api/gemini", body: { input: "Hello" } });
+      await geminiHandler(req, res);
       const result = res.getResponse();
       assert.equal(result.status, 401);
       assert.match(result.data.error, /Authentication required/);
@@ -356,6 +366,7 @@ describe("API & Security Integration Tests", () => {
       const { req, res } = createMockReqRes({
         method: "POST",
         url: "/api/gemini",
+        headers: { "x-test-user-id": userA },
         body: {},
       });
       await geminiHandler(req, res);
@@ -363,5 +374,131 @@ describe("API & Security Integration Tests", () => {
       assert.equal(result.status, 400);
       assert.match(result.data.error, /Missing or invalid 'input'/);
     });
+
+    it("POST /api/gemini with unwhitelisted model -> 400 Bad Request", async () => {
+      const { req, res } = createMockReqRes({
+        method: "POST",
+        url: "/api/gemini",
+        headers: { "x-test-user-id": userA },
+        body: { input: "Test", model: "unapproved-arbitrary-model" },
+      });
+      await geminiHandler(req, res);
+      const result = res.getResponse();
+      assert.equal(result.status, 400);
+      assert.match(result.data.error, /Invalid or unsupported Gemini model/);
+    });
+
+    it("POST /api/gemini with oversized input -> 400 Bad Request", async () => {
+      const oversizedInput = "A".repeat(65000);
+      const { req, res } = createMockReqRes({
+        method: "POST",
+        url: "/api/gemini",
+        headers: { "x-test-user-id": userA },
+        body: { input: oversizedInput },
+      });
+      await geminiHandler(req, res);
+      const result = res.getResponse();
+      assert.equal(result.status, 400);
+      assert.match(result.data.error, /exceeds the maximum allowed limit/);
+    });
+
+    it("Private APIs enforce Cache-Control: no-store and security headers", async () => {
+      const { req, res } = createMockReqRes({
+        method: "GET",
+        url: "/api/users",
+        headers: { "x-test-user-id": userA },
+      });
+      await usersHandler(req, res);
+      const result = res.getResponse();
+      assert.equal(result.status, 200);
+      assert.match(result.headers["Cache-Control"], /no-store/);
+      assert.equal(result.headers["X-Content-Type-Options"], "nosniff");
+    });
+  });
+
+  // 6. Advanced Coding & ATS Security Hardening
+  describe("Advanced Coding, ATS, and Rate Limiting Security", () => {
+    it("POST /api/coding with unsupported language -> 400 Bad Request", async () => {
+      const { req, res } = createMockReqRes({
+        method: "POST",
+        url: "/api/coding?action=run",
+        query: { action: "run" },
+        headers: { "x-test-user-id": userA },
+        body: {
+          code: "console.log(1)",
+          language: "unsupported_shell",
+          questionId: "two-sum",
+        },
+      });
+      await codingHandler(req, res);
+      const result = res.getResponse();
+      assert.equal(result.status, 400);
+      assert.match(result.data.error, /Invalid or unsupported language/);
+    });
+
+    it("POST /api/coding with oversized code (>50k chars) -> 400 Bad Request", async () => {
+      const { req, res } = createMockReqRes({
+        method: "POST",
+        url: "/api/coding?action=run",
+        query: { action: "run" },
+        headers: { "x-test-user-id": userA },
+        body: {
+          code: "x".repeat(55000),
+          language: "javascript",
+          questionId: "two-sum",
+        },
+      });
+      await codingHandler(req, res);
+      const result = res.getResponse();
+      assert.equal(result.status, 400);
+      assert.match(result.data.error, /exceeds maximum limit of 50,000 characters/);
+    });
+
+    it("GET /api/ats?action=history without token returns 401 Unauthorized", async () => {
+      const { req, res } = createMockReqRes({
+        method: "GET",
+        url: "/api/ats?action=history",
+        query: { action: "history" },
+      });
+      await atsHandler(req, res);
+      const result = res.getResponse();
+      assert.equal(result.status, 401);
+      assert.match(result.data.error, /Authentication required/);
+    });
+
+    it("POST /api/ats with oversized resume text (>100k chars) -> 400 Bad Request", async () => {
+      const { req, res } = createMockReqRes({
+        method: "POST",
+        url: "/api/ats?action=analyze",
+        query: { action: "analyze" },
+        headers: { "x-test-user-id": userA },
+        body: {
+          resumeText: "word ".repeat(25000), // ~125,000 chars
+        },
+      });
+      await atsHandler(req, res);
+      const result = res.getResponse();
+      assert.equal(result.status, 400);
+      assert.match(result.data.error, /exceeds maximum limit of 100,000 characters/);
+    });
+
+    it("Exceeding rate limit triggers HTTP 429 Too Many Requests", async () => {
+      const rateLimitUser = "rl_test_user_" + Date.now();
+      let lastResult = null;
+      // Rate limit for gemini is 20 per minute
+      for (let i = 0; i < 22; i++) {
+        const { req, res } = createMockReqRes({
+          method: "POST",
+          url: "/api/gemini",
+          headers: { "x-test-user-id": rateLimitUser },
+          body: { input: "ping" },
+        });
+        await geminiHandler(req, res);
+        lastResult = res.getResponse();
+      }
+      assert.equal(lastResult.status, 429);
+      assert.match(lastResult.data.error, /rate limit exceeded/i);
+    });
   });
 });
+

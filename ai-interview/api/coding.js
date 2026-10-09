@@ -13,8 +13,9 @@
 import { ObjectId } from "mongodb";
 import { GoogleGenAI } from "@google/genai";
 import { handleCors } from "./_cors.js";
-import { authenticateRequest } from "./_lib/auth.js";
+import { authenticateRequest, applyPrivateSecurityHeaders } from "./_lib/auth.js";
 import { getDb, ensureIndexes } from "./_lib/mongodb.js";
+import { checkRateLimit, setRateLimitHeaders } from "./_lib/rateLimiter.js";
 import { runCustomInput, evaluateCode } from "./_lib/codingJudge.js";
 import { CODING_QUESTIONS } from "../src/data/codingQuestionsData.js";
 
@@ -290,8 +291,12 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: "Origin not permitted by CORS policy." });
   }
 
+  applyPrivateSecurityHeaders(res);
+
   const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
   const action = req.query.action || url.searchParams.get("action");
+
+  const ALLOWED_LANGUAGES = ["javascript", "python", "java", "cpp", "csharp", "dart"];
 
   try {
     // ── 2. GET /questions: Public question catalog ───────────────────────────
@@ -304,7 +309,7 @@ export default async function handler(req, res) {
         shortDescription: q.shortDescription,
         executionMode: q.executionMode || "function",
         optimalComplexity: q.optimalComplexity || { time: "O(n)", space: "O(1)" },
-        supportedLanguages: ["javascript", "python", "java", "cpp", "csharp", "dart"],
+        supportedLanguages: ALLOWED_LANGUAGES,
       }));
       return res.status(200).json({ questions: publicQuestions });
     }
@@ -312,13 +317,14 @@ export default async function handler(req, res) {
     // ── 3. GET /question: Single problem details & sample test cases ────────
     if (req.method === "GET" && action === "question") {
       const id = req.query.id || url.searchParams.get("id");
-      if (!id) {
-        return res.status(400).json({ error: "Missing 'id' parameter." });
+      if (!id || typeof id !== "string" || id.length > 64) {
+        return res.status(400).json({ error: "Missing or invalid 'id' parameter." });
       }
 
-      const question = CODING_QUESTIONS.find((q) => q.id === id);
+      const cleanId = String(id).trim();
+      const question = CODING_QUESTIONS.find((q) => q.id === cleanId);
       if (!question) {
-        return res.status(404).json({ error: `Question '${id}' not found.` });
+        return res.status(404).json({ error: `Question '${cleanId}' not found.` });
       }
 
       // Return problem definition without exposing hidden tests
@@ -356,34 +362,57 @@ export default async function handler(req, res) {
 
     // ── 4. POST /run: Execute code against sample tests or custom input ─────
     if (req.method === "POST" && action === "run") {
+      const rlResult = await checkRateLimit(`coding_exec_${userId}`, {
+        limit: 25,
+        windowMs: 60 * 1000,
+      });
+      setRateLimitHeaders(res, rlResult);
+      if (!rlResult.allowed) {
+        return res.status(429).json({
+          error: "Too many code execution requests. Please wait before running again.",
+        });
+      }
+
       const { questionId, language, code, customInput, isCustom } = req.body || {};
 
       if (!code || typeof code !== "string" || code.trim().length === 0) {
         return res.status(400).json({ error: "Code cannot be empty." });
       }
 
-      if (!language) {
-        return res.status(400).json({ error: "Missing 'language' parameter." });
+      if (code.length > 50000) {
+        return res.status(400).json({ error: "Code submission exceeds maximum limit of 50,000 characters." });
       }
+
+      if (!language || !ALLOWED_LANGUAGES.includes(String(language).toLowerCase())) {
+        return res.status(400).json({
+          error: `Invalid or unsupported language '${language}'. Supported: ${ALLOWED_LANGUAGES.join(", ")}`,
+        });
+      }
+
+      const safeLanguage = String(language).toLowerCase();
 
       // Custom input execution
       if (isCustom) {
+        const safeCustomInput = typeof customInput === "string" ? customInput : "";
+        if (safeCustomInput.length > 10000) {
+          return res.status(400).json({ error: "Custom input exceeds maximum limit of 10,000 characters." });
+        }
         const customResult = await runCustomInput({
           code,
-          language,
-          customInput: typeof customInput === "string" ? customInput : "",
+          language: safeLanguage,
+          customInput: safeCustomInput,
         });
         return res.status(200).json(customResult);
       }
 
       // Sample test cases execution
-      if (!questionId) {
-        return res.status(400).json({ error: "Missing 'questionId'." });
+      if (!questionId || typeof questionId !== "string" || questionId.length > 64) {
+        return res.status(400).json({ error: "Missing or invalid 'questionId'." });
       }
 
       const evalResult = await evaluateCode({
-        questionId,
-        language,
+        questionId: String(questionId).trim(),
+        language: safeLanguage,
         code,
         isSubmission: false, // Sample test cases only
       });
@@ -393,15 +422,39 @@ export default async function handler(req, res) {
 
     // ── 5. POST /submit: Run against sample + hidden tests & save scorecard ─
     if (req.method === "POST" && action === "submit") {
+      const rlResult = await checkRateLimit(`coding_exec_${userId}`, {
+        limit: 25,
+        windowMs: 60 * 1000,
+      });
+      setRateLimitHeaders(res, rlResult);
+      if (!rlResult.allowed) {
+        return res.status(429).json({
+          error: "Too many code execution requests. Please wait before submitting again.",
+        });
+      }
+
       const { questionId, language, code } = req.body || {};
 
       if (!code || typeof code !== "string" || code.trim().length === 0) {
         return res.status(400).json({ error: "Code cannot be empty." });
       }
 
-      const question = CODING_QUESTIONS.find((q) => q.id === questionId);
+      if (code.length > 50000) {
+        return res.status(400).json({ error: "Code submission exceeds maximum limit of 50,000 characters." });
+      }
+
+      if (!language || !ALLOWED_LANGUAGES.includes(String(language).toLowerCase())) {
+        return res.status(400).json({
+          error: `Invalid or unsupported language '${language}'. Supported: ${ALLOWED_LANGUAGES.join(", ")}`,
+        });
+      }
+
+      const safeLanguage = String(language).toLowerCase();
+      const cleanQuestionId = typeof questionId === "string" ? questionId.trim() : "";
+
+      const question = CODING_QUESTIONS.find((q) => q.id === cleanQuestionId);
       if (!question) {
-        return res.status(404).json({ error: `Question '${questionId}' not found.` });
+        return res.status(404).json({ error: `Question '${cleanQuestionId}' not found.` });
       }
 
       // Run against BOTH sample and hidden test cases in isolated sandbox
@@ -479,18 +532,36 @@ export default async function handler(req, res) {
 
     // ── 6. POST /hint: Request progressive AI hint ───────────────────────────
     if (req.method === "POST" && action === "hint") {
+      const rlResult = await checkRateLimit(`coding_hint_${userId}`, {
+        limit: 15,
+        windowMs: 60 * 1000,
+      });
+      setRateLimitHeaders(res, rlResult);
+      if (!rlResult.allowed) {
+        return res.status(429).json({
+          error: "Too many hint requests. Please wait before asking for another hint.",
+        });
+      }
+
       const { questionId, hintLevel, currentCode, language } = req.body || {};
 
-      const question = CODING_QUESTIONS.find((q) => q.id === questionId);
+      const cleanQuestionId = typeof questionId === "string" ? questionId.trim() : "";
+      const question = CODING_QUESTIONS.find((q) => q.id === cleanQuestionId);
       if (!question) {
-        return res.status(404).json({ error: `Question '${questionId}' not found.` });
+        return res.status(404).json({ error: `Question '${cleanQuestionId}' not found.` });
       }
+
+      const safeLevel = [1, 2, 3].includes(Number(hintLevel)) ? Number(hintLevel) : 1;
+      const safeCode = typeof currentCode === "string" ? currentCode.slice(0, 50000) : "";
+      const safeLang = typeof language === "string" && ALLOWED_LANGUAGES.includes(language.toLowerCase())
+        ? language.toLowerCase()
+        : "javascript";
 
       const hintResult = await generateAiHint({
         question,
-        hintLevel: Number(hintLevel) || 1,
-        currentCode: currentCode || "",
-        language: language || "javascript",
+        hintLevel: safeLevel,
+        currentCode: safeCode,
+        language: safeLang,
       });
 
       return res.status(200).json(hintResult);
@@ -504,17 +575,20 @@ export default async function handler(req, res) {
       const filter = { userId }; // Strictly enforce authenticated userId
 
       const qId = req.query?.questionId || url?.searchParams?.get("questionId");
-      if (qId) {
-        filter.questionId = qId;
+      if (qId && typeof qId === "string" && qId.length <= 64) {
+        filter.questionId = qId.trim();
       }
-      if (req.query?.difficulty || url?.searchParams?.get("difficulty")) {
-        filter.difficulty = req.query?.difficulty || url?.searchParams?.get("difficulty");
+      const diff = req.query?.difficulty || url?.searchParams?.get("difficulty");
+      if (diff && ["Easy", "Medium", "Hard"].includes(diff)) {
+        filter.difficulty = diff;
       }
-      if (req.query?.language || url?.searchParams?.get("language")) {
-        filter.language = req.query?.language || url?.searchParams?.get("language");
+      const lang = req.query?.language || url?.searchParams?.get("language");
+      if (lang && ALLOWED_LANGUAGES.includes(String(lang).toLowerCase())) {
+        filter.language = String(lang).toLowerCase();
       }
-      if (req.query?.status || url?.searchParams?.get("status")) {
-        filter.status = req.query?.status || url?.searchParams?.get("status");
+      const stat = req.query?.status || url?.searchParams?.get("status");
+      if (stat && typeof stat === "string" && stat.length <= 50) {
+        filter.status = stat;
       }
 
       const submissions = await db
@@ -551,16 +625,18 @@ export default async function handler(req, res) {
     // ── 8. GET /submission: Get single submission details for scorecard ──────
     if (req.method === "GET" && action === "submission") {
       const id = req.query.id || url.searchParams.get("id");
-      if (!id) {
-        return res.status(400).json({ error: "Missing 'id' parameter." });
+      if (!id || typeof id !== "string" || id.length > 64) {
+        return res.status(400).json({ error: "Missing or invalid 'id' parameter." });
       }
 
+      const cleanId = String(id).trim();
       const db = await getDb();
       let query;
-      try {
-        query = { _id: new ObjectId(id), userId };
-      } catch {
-        query = { id, userId };
+      const isHex24 = /^[0-9a-fA-F]{24}$/.test(cleanId);
+      if (isHex24 && ObjectId.isValid(cleanId)) {
+        query = { _id: new ObjectId(cleanId), userId };
+      } else {
+        query = { id: cleanId, userId };
       }
 
       const sub = await db.collection("codingSubmissions").findOne(query);
@@ -602,16 +678,18 @@ export default async function handler(req, res) {
       (req.method === "POST" && action === "delete")
     ) {
       const id = req.query.id || url.searchParams.get("id") || req.body?.id;
-      if (!id) {
-        return res.status(400).json({ error: "Missing 'id' parameter." });
+      if (!id || typeof id !== "string" || id.length > 64) {
+        return res.status(400).json({ error: "Missing or invalid 'id' parameter." });
       }
 
+      const cleanId = String(id).trim();
       const db = await getDb();
       let query;
-      try {
-        query = { _id: new ObjectId(id), userId };
-      } catch {
-        query = { id, userId };
+      const isHex24 = /^[0-9a-fA-F]{24}$/.test(cleanId);
+      if (isHex24 && ObjectId.isValid(cleanId)) {
+        query = { _id: new ObjectId(cleanId), userId };
+      } else {
+        query = { id: cleanId, userId };
       }
 
       const deleteResult = await db.collection("codingSubmissions").deleteOne(query);
@@ -624,10 +702,9 @@ export default async function handler(req, res) {
 
     return res.status(400).json({ error: `Unknown action '${action}' or method '${req.method}'.` });
   } catch (error) {
-    console.error("[api/coding] Server error:", error);
+    console.error("[api/coding] Server error:", error.message);
     return res.status(500).json({
       error: "Internal server error. Please try again later.",
-      details: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 }

@@ -43,6 +43,7 @@ export function normalizeOrigin(raw) {
  * Known default production domains for this application.
  */
 const DEFAULT_ALLOWED_DOMAINS = [
+  "https://mocinterview.vercel.app",
   "https://ai-mock-interview-platform-pied-one.vercel.app",
 ];
 
@@ -180,7 +181,7 @@ export function handleCors(req, res) {
 
   if (isAllowed) {
     res.setHeader("Access-Control-Allow-Origin", normalizedRequestOrigin);
-    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
     res.setHeader("Access-Control-Max-Age", "86400"); // 24 hours
     res.setHeader("Vary", "Origin");

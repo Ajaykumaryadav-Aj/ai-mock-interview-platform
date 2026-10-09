@@ -161,7 +161,30 @@ class MemoryCollection {
     if (doc && update.$set) {
       Object.assign(doc, update.$set);
     }
+    if (doc && update.$inc) {
+      for (const [k, v] of Object.entries(update.$inc)) {
+        doc[k] = (doc[k] || 0) + v;
+      }
+    }
     return { acknowledged: true, matchedCount: doc ? 1 : 0 };
+  }
+  async findOneAndUpdate(filter, update, options = {}) {
+    let doc = this.docs.find((d) => matchQuery(d, filter));
+    if (!doc && options.upsert) {
+      const id = new ObjectId();
+      doc = { _id: id, id: id.toString(), ...filter };
+      if (update.$setOnInsert) Object.assign(doc, update.$setOnInsert);
+      this.docs.push(doc);
+    }
+    if (doc) {
+      if (update.$set) Object.assign(doc, update.$set);
+      if (update.$inc) {
+        for (const [k, v] of Object.entries(update.$inc)) {
+          doc[k] = (doc[k] || 0) + v;
+        }
+      }
+    }
+    return doc;
   }
   async deleteOne(filter) {
     const idx = this.docs.findIndex((d) => matchQuery(d, filter));

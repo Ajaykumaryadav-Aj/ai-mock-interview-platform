@@ -92,12 +92,26 @@ const callGeminiInteraction = async ({ model = "gemini-3.8-flash", input, respon
   let proxyResponse;
   let isProxyReachable = false;
 
+  const authHeaders = {
+    "Content-Type": "application/json",
+  };
+
+  try {
+    if (typeof window !== "undefined" && window.Clerk?.session) {
+      const token = await window.Clerk.session.getToken();
+      if (token) {
+        authHeaders["Authorization"] = `Bearer ${token}`;
+      }
+    }
+  } catch {
+    // Non-fatal, cookie fallback
+  }
+
   try {
     proxyResponse = await fetch("/api/gemini", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: authHeaders,
+      credentials: "same-origin",
       body: JSON.stringify({ model, input, response_format }),
     });
     isProxyReachable = true;
